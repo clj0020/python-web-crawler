@@ -5,6 +5,7 @@ While scraping, the program saves each page's HTML into a text file and the runs
 simply enter an url and the depth that you want to search and press submit. The program will then start scraping sites, and once the site is saved to the html_files folder, it will be
 added to a list in the user interface that allows you to view that sites unigram features as a graph when you click on them.
 
+Note: Written in Python 3
 
 # Usage
 
@@ -47,4 +48,4 @@ Note: make sure you have [Make](https://www.gnu.org/software/make/) installed.
 
 ## Python3
 
-If you code in Python3 and run into issues, make sure you're shell is pointing to the right version of Python with `python --version`. If it's pointing to something less than 3 you can change the makefile to use `python3` and `pip3`.
+If you have python and run into issues, make sure you're shell is pointing to the right version of Python with `python --version`.
