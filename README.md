@@ -1,6 +1,9 @@
 # Python Application Boilerplate
 
-Boilerplate code for building applications in Python.
+This is a web crawler built in python that implements Iterative Deepening Depth Search to scrape all of the children links of a specified base url up to a specified depth.
+While scraping, the program saves each page's HTML into a text file and the runs a Unigram Feature Extractor on those files. Once dependencies are installed and the program is run,
+simply enter an url and the depth that you want to search and press submit. The program will then start scraping sites, and once the site is saved to the html_files folder, it will be
+added to a list in the user interface that allows you to view that sites unigram features as a graph when you click on them.
 
 
 # Usage
@@ -36,7 +39,7 @@ make start
 
 [__main__.py]: ./__main__.py
 
-# Makfefile 
+# Makefile
 
 [Makefile][] contains all the shortcuts for frequently used project commands.
 
