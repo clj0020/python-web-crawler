@@ -1,0 +1,7 @@
+############ Requirements file ##################
+anytree
+beautifulsoup4
+requests
+uuid
+matplotlib
+numpy
