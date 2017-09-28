@@ -14,3 +14,7 @@ test:
 # run the command to start the application
 start:
 	${PYTHON} .
+
+# build executable
+executable:
+	${PYTHON} setup.py build

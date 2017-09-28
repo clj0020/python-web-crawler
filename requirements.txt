@@ -5,3 +5,4 @@ requests
 uuid
 matplotlib
 numpy
+cx_Freeze

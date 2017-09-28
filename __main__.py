@@ -4,6 +4,8 @@ import time
 import queue
 from gui import *
 from src import WebScraper
+import numpy.core._methods
+import numpy.lib.format
 
 ENCODING = 'utf-8'
 
