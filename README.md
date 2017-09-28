@@ -39,7 +39,7 @@ make start
 
 ## Creating an .exe file (Windows)
 
-To create an .exe file in the [build][] package:
+To create an .exe file in the build package:
 
 ```shell
 make executable
