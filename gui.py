@@ -60,7 +60,7 @@ class MainWindow(Window):
         """Build main window, set widgets positioning and event bindings"""
 
         form_frame = tk.Frame(self.root)
-        form_frame.pack()
+        form_frame.pack(fill='x')
 
         tk.Label(form_frame, text="Url").grid(row=0, column=0, sticky='W')
         url = tk.StringVar()
@@ -77,7 +77,7 @@ class MainWindow(Window):
         self.submit_button.grid(row=2, column=0, columnspan=2, sticky='W')
 
         url_list_frame = tk.Frame(self.root)
-        url_list_frame.pack()
+        url_list_frame.pack(fill='x')
 
         self.url_list = tk.Listbox(url_list_frame, selectmode=tk.SINGLE, font=self.font,
                                       exportselection=False)

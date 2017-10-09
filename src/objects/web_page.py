@@ -48,8 +48,7 @@ class WebPage(Node):
         soup = BeautifulSoup(html, 'html.parser')
 
         print("Scraped {}...".format(self.identifier))
-
-
+        
         return soup
 
     def find_children(self):
