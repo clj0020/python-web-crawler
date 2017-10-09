@@ -4,6 +4,7 @@ import time
 import queue
 from gui import *
 from src import WebScraper
+from src import MachineLearner
 import numpy.core._methods
 import numpy.lib.format
 
@@ -20,6 +21,7 @@ class MainApplication(threading.Thread):
 
         self.gui = GUI(self)
         self.web_scraper = None
+        self.machine_learner = None
 
         self.start()
         self.gui.start()
@@ -60,6 +62,10 @@ class MainApplication(threading.Thread):
 
                         # self.gui.display_message(url)
                         # self.web_scraper.initializeScraping(url)
+
+    def create_machine_learner(self):
+       self.machine_learner = MachineLearner()
+       self.machine_learner.start()
 
     def get_node(self, node):
         return self.web_scraper.tree[node]

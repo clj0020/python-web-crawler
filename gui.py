@@ -14,6 +14,7 @@ class GUI(threading.Thread):
         self.font = ('Helvetica', 13)
         self.client = client
         self.main_window = None
+        self.machine_learner_window = None
 
     def run(self):
         self.main_window = MainWindow(self, self.font)
@@ -31,6 +32,12 @@ class GUI(threading.Thread):
     def send_message(self, message):
         """Enqueue message in client's queue"""
         self.client.queue.put(message)
+
+    def open_machine_learner_window(self):
+        self.machine_learner_window = MachineLearnerWindow(self, self.font)
+        self.client.create_machine_learner()
+        self.machine_learner_window.run()
+
 
 class Window(object):
     def __init__(self, title, font):
@@ -51,8 +58,7 @@ class MainWindow(Window):
         self.url_list = None
         self.unigram_table = None
         self.target = None
-        self.webpage_frame = None
-        self.url_display = None
+        self.open_machine_learner_window_button = None
 
         self.build_window()
 
@@ -74,7 +80,11 @@ class MainWindow(Window):
 
         self.submit_button = tk.Button(form_frame, text="Submit")
         self.submit_button.bind('<Button-1>', self.send_entry_event)
-        self.submit_button.grid(row=2, column=0, columnspan=2, sticky='W')
+        self.submit_button.grid(row=2, column=0, columnspan=1, sticky='W')
+
+        self.open_machine_learner_window_button = tk.Button(form_frame, text="Open Machine Learner")
+        self.open_machine_learner_window_button.bind('<Button-1>', self.open_machine_learner_window)
+        self.open_machine_learner_window_button.grid(row=2, column=1, columnspan=1, sticky='W')
 
         url_list_frame = tk.Frame(self.root)
         url_list_frame.pack(fill='x')
@@ -83,12 +93,6 @@ class MainWindow(Window):
                                       exportselection=False)
         self.url_list.bind('<<ListboxSelect>>', self.selected_url_event)
         self.url_list.pack(fill=tk.BOTH, expand=tk.YES)
-
-        self.webpage_frame = tk.Frame(self.root)
-        self.webpage_frame.pack()
-
-        self.url_display = tk.Label(self.webpage_frame, text = "", width = 15)
-        self.url_display.pack()
 
         # Protocol for closing window using 'x' button
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
@@ -113,7 +117,6 @@ class MainWindow(Window):
 
         plt.show()
 
-
     def send_entry_event(self, event):
         """Send message from entry field to target"""
         url = self.url_entry.get()
@@ -130,6 +133,10 @@ class MainWindow(Window):
             messagebox.showinfo('Warning', 'You must enter valid url and depth.')
         return 'break'
 
+    def open_machine_learner_window(self, event):
+        """Open the Machine Learner Window"""
+        self.gui.open_machine_learner_window()
+
     def exit_event(self, event):
         """Quit app when "Exit" pressed"""
         # self.gui.notify_server(self.login, 'logout')
@@ -145,3 +152,24 @@ class MainWindow(Window):
             self.url_list.configure(state='normal')
             self.url_list.insert(tk.END, message)
             self.url_list.see(tk.END)
+
+
+class MachineLearnerWindow(Window):
+    def __init__(self, gui, font):
+        super().__init__("Machine Learner", font)
+        self.gui = gui
+        self.lock = threading.RLock()
+
+        self.build_window()
+
+    def build_window(self):
+        """Build main window, set widgets positioning and event bindings"""
+
+
+    def send_message(self, data):
+        message = "machine_learner"
+
+    def run(self):
+        """Handle chat window actions"""
+        self.root.mainloop()
+        self.root.destroy()
