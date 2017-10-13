@@ -159,15 +159,107 @@ class MachineLearnerWindow(Window):
         super().__init__("Machine Learner", font)
         self.gui = gui
         self.lock = threading.RLock()
+        self.k_entry = None
+        self.split_entry = None
+        self.k_nearest_neighbor_button = None
+        self.k_nearest_messages_list = None
+
+        self.weighted_k_nearest_neighbor_button = None
+        self.general_regression_neural_network_button = None
 
         self.build_window()
 
     def build_window(self):
         """Build main window, set widgets positioning and event bindings"""
 
+        # Size config
+        self.root.geometry('750x500')
+        self.root.minsize(600, 400)
 
-    def send_message(self, data):
-        message = "machine_learner"
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(fill="both")
+
+        k_nearest_neighbor_frame = tk.Frame(main_frame)
+        k_nearest_neighbor_frame.pack(side="left")
+
+        tk.Label(k_nearest_neighbor_frame, text="K-Nearest Neighbor").pack(side="top")
+
+        k_nearest_neighbor_form_frame = tk.Frame(k_nearest_neighbor_frame)
+        k_nearest_neighbor_form_frame.pack(side="top")
+
+        k_nearest_neighbor_k_entry_frame = tk.Frame(k_nearest_neighbor_form_frame)
+        k_nearest_neighbor_k_entry_frame.pack(side="top")
+
+        tk.Label(k_nearest_neighbor_k_entry_frame, text="K").pack(side="left")
+        k = tk.IntVar()
+        self.k_entry = tk.Entry(k_nearest_neighbor_k_entry_frame, textvariable=k)
+        self.k_entry.pack(side="right")
+
+        k_nearest_neighbor_split_entry_frame = tk.Frame(k_nearest_neighbor_form_frame)
+        k_nearest_neighbor_split_entry_frame.pack(side="top")
+
+        tk.Label(k_nearest_neighbor_split_entry_frame, text="Split").pack(side="left")
+        split = tk.DoubleVar()
+        self.split_entry = tk.Entry(k_nearest_neighbor_split_entry_frame, textvariable=split)
+        self.split_entry.pack(side="right")
+
+        self.k_nearest_neighbor_button = tk.Button(k_nearest_neighbor_form_frame, text="Submit")
+        self.k_nearest_neighbor_button.bind('<Button-1>', self.start_k_nearest_neighbor)
+        self.k_nearest_neighbor_button.pack(side="bottom")
+
+        k_nearest_neighbor_results_frame = tk.Frame(k_nearest_neighbor_frame)
+        k_nearest_neighbor_results_frame.pack(side="bottom")
+
+        # ScrolledText widget for displaying messages
+        self.k_nearest_messages_list = scrolledtext.ScrolledText(k_nearest_neighbor_results_frame, wrap='word', font=self.font)
+        # self.messages_list.insert(tk.END, 'Welcome to Python Chat\n')
+        self.k_nearest_messages_list.configure(state='disabled')
+        self.k_nearest_messages_list.pack()
+
+        weighted_k_nearest_neighbor_frame = tk.Frame(main_frame)
+        weighted_k_nearest_neighbor_frame.pack(side="left")
+
+        self.weighted_k_nearest_neighbor_button = tk.Button(weighted_k_nearest_neighbor_frame, text="Submit")
+        self.weighted_k_nearest_neighbor_button.pack()
+
+        general_regression_neural_network_frame = tk.Frame(main_frame)
+        general_regression_neural_network_frame.pack(side="left")
+
+        self.general_regression_neural_network_button = tk.Button(general_regression_neural_network_frame, text="Submit")
+        self.general_regression_neural_network_button.pack()
+
+        # Protocol for closing window using 'x' button
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
+
+
+    def start_k_nearest_neighbor(self, event):
+        print("Button clicked..")
+        k = self.k_entry.get()
+        split = self.split_entry.get()
+
+        if k != 0 and split != 0:
+            message = 'machine_learner;' + k + ';' + split
+            print(message)
+            self.gui.send_message(message.encode(ENCODING))
+        else:
+            messagebox.showinfo('Warning', 'You must enter valid url and depth.')
+        return 'break'
+
+    def display_message(self, message):
+        """Display message in ScrolledText widget"""
+        with self.lock:
+            self.k_nearest_messages_list.configure(state='normal')
+            self.k_nearest_messages_list.insert(tk.END, message)
+            self.k_nearest_messages_list.configure(state='disabled')
+            self.k_nearest_messages_list.see(tk.END)
+
+    def exit_event(self, event):
+        """Quit app when "Exit" pressed"""
+        self.root.quit()
+
+    def on_closing_event(self):
+        """Exit window when 'x' button is pressed"""
+        self.exit_event(None)
 
     def run(self):
         """Handle chat window actions"""

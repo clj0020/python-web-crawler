@@ -53,18 +53,21 @@ class MainApplication(threading.Thread):
                         depth = int(msg[2])
                         print('DEPTH:', depth)
 
-
-                        # self.gui.display_message(url)
                         self.web_scraper = WebScraper(self, url, depth)
                         self.web_scraper.start()
-                        # self.unigram_extractor.start()
+                    elif msg[0] == 'machine_learner':
 
+                        k = int(msg[1])
+                        print('K', k)
 
-                        # self.gui.display_message(url)
-                        # self.web_scraper.initializeScraping(url)
+                        split = float(msg[2])
+                        print('Split', split)
+
+                        self.machine_learner.initialize_k_nearest_neighbor(k, split)
+
 
     def create_machine_learner(self):
-       self.machine_learner = MachineLearner()
+       self.machine_learner = MachineLearner(self)
        self.machine_learner.start()
 
     def get_node(self, node):
