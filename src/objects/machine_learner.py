@@ -20,8 +20,8 @@ class MachineLearner(threading.Thread):
     def client(self):
         return self.__client
 
-    def initialize_k_nearest_neighbor(self, k, split):
-        self.__k_nearest_neighbor = KNearestNeighbor(self, k, split)
+    def initialize_k_nearest_neighbor(self, k):
+        self.__k_nearest_neighbor = KNearestNeighbor(self, k)
         self.__k_nearest_neighbor.start()
 
 

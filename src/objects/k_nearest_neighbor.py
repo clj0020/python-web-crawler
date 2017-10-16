@@ -6,19 +6,16 @@ from random import sample
 
 class KNearestNeighbor(threading.Thread):
 
-    def __init__(self, machine_learner, k, split):
+    def __init__(self, machine_learner, k):
         super().__init__(daemon=False, target=self.run)
         self.__machine_learner = machine_learner
-        # self.__training_set = []
-        # self.__test_set = []
         self.__dataset = []
-        self.__split = split
         self.__k = k
 
 
     def run(self):
         self.machine_learner.client.gui.machine_learner_window.display_message("\nKNearestNeighbor initialized...")
-        self.load_dataset(self.split)
+        self.load_dataset()
         self.k_nearest_neighbor(self.k)
 
     @property
@@ -29,24 +26,12 @@ class KNearestNeighbor(threading.Thread):
     def dataset(self):
         return self.__dataset
 
-    # @property
-    # def training_set(self):
-    #     return self.__training_set
-    #
-    # @property
-    # def test_set(self):
-    #     return self.__test_set
-
     @property
     def k(self):
         return self.__k
 
-    @property
-    def split(self):
-        return self.__split
-
     # Load the data into the training and test sets from the dataset file
-    def load_dataset(self, split):
+    def load_dataset(self):
         self.machine_learner.client.gui.machine_learner_window.display_message("\nLoading dataset...")
         with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
@@ -58,18 +43,13 @@ class KNearestNeighbor(threading.Thread):
                     array.append(float(number))
                 self.__dataset.append(array)
 
-            # Randomly add datasets to either test set or training set based on split
-            # for x in range(len(dataset) - 1):
-            #     if random.random() < split:
-            #         self.__training_set.append(dataset[x])
-            #     else:
-            #         self.__test_set.append(dataset[x])
             myfile.close()
 
     # Calculate the euclidean distance between every unigram feature vector in two datasets
     def euclidean_distance(self, dataset1, dataset2, length):
         distance = 0
-        for x in range(length):
+        # for all unigram values in the unigram vectors
+        for x in range(2, 97):
             distance += pow((dataset1[x] - dataset2[x]), 2)
         return math.sqrt(distance)
 
@@ -106,7 +86,6 @@ class KNearestNeighbor(threading.Thread):
                 # initialize the response in the class votes array to 1
                 classVotes[response] = 1
 
-        print(classVotes)
         # Sort votes for class attribute in descending order
         sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
 
@@ -115,65 +94,42 @@ class KNearestNeighbor(threading.Thread):
 
     # Get the accuracy of the predictions (classification accuracy) by calculating the
     # ratio of total correct predictions out of all predictions made.
-    def getAccuracy(self, testSet, predictions):
+    def getAccuracy(self, dataset, predictions):
         correct = 0
         # iterate through the test set
-        for x in range(len(testSet)):
+        for x in range(len(dataset)):
             # if the classification of the test set matches the prediction
-            if testSet[x][1] == predictions[x]:
+            if dataset[x][1] == predictions[x]:
                 correct += 1 # add 1 to correct
 
         # return the result of dividing the number of correct predictions by the total amount of predictions and multiplying by 100
-        return (correct / float(len(testSet))) * 100.0
+        return (correct / float(len(dataset))) * 100.0
 
-    # The actual k-nearest neighbor algorithm
+    # The actual k-nearest neighbor algorithm.
     def k_nearest_neighbor(self, k):
+        """ Uses Leave One Out for Cross Validation """
         self.machine_learner.client.gui.machine_learner_window.display_message("\nStarting training...")
-
-        train_data, test_data = self.create_kfolds(self.dataset, 10)
-
         predictions = []
-        # iterate through the test set
-        for x in range(len(test_data)):
-            # find the k amount of neighbors in the training set for each instance of the test set
-            neighbors = self.get_neighbors(train_data, test_data[x], k)
 
-            # get the neighbors' prediction
-            result = self.get_response(neighbors)
+        # Loop through dataset taking one set as test set and the rest as training sets
+        for x in range(len(self.dataset)):
+            test_set = self.dataset[x]
+            # training set consists of every element in dataset except for the test set
+            training_sets = [t for i,t in enumerate(self.dataset) if i!=x]
+
+            # Get the k nearest neighbors of the test_set in the training sets
+            neighbors = self.get_neighbors(training_sets, test_set, k)
+
+            # get the neighbors' majority vote for a prediction
+            prediction = self.get_response(neighbors)
+            print('> predicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
+            self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
 
             # add the neighbors' prediction to the predictions array
-            predictions.append(result)
-            # self.machine_learner.client.gui.machine_learner_window.display_message('\n> predicted=' + repr(result) + ', actual=' + repr(self.__test_set[x][1]))
-            print('> predicted=' + repr(result) + ', actual=' + repr(test_data[x][1]))
-
-        # print("Number of predictions: {}".format(len(predictions)))
+            predictions.append(prediction)
 
         # get the classification accuracy for all of the predictions
-        accuracy = self.getAccuracy(test_data, predictions)
+        accuracy = self.getAccuracy(self.dataset, predictions)
+
         self.machine_learner.client.gui.machine_learner_window.display_message('\nAccuracy: ' + repr(accuracy) + '%')
         print('Accuracy: ' + repr(accuracy) + '%')
-
-
-    def create_kfolds(self, dataset, k):
-        train_test_split = []
-        size = len(dataset)
-        num_of_elements = int(size / k)
-        for i in range(k):
-            new_sample = sample(dataset, num_of_elements)
-            train_test_split.append(new_sample)
-            for row in new_sample:
-                dataset.remove(row)
-        if len(dataset) != 0:
-            for rows in range(len(dataset)):
-                train_test_split[rows].append(dataset[rows])
-            dataset.clear()
-
-        split = train_test_split[:]
-        real_index = random.randrange(0, len(split))
-        test_data = split[real_index]
-        split.remove(test_data)
-        train_data = []
-        for x in split:
-            for y in x:
-                train_data.append(y)
-        return train_data, test_data

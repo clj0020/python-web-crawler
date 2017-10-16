@@ -160,7 +160,6 @@ class MachineLearnerWindow(Window):
         self.gui = gui
         self.lock = threading.RLock()
         self.k_entry = None
-        self.split_entry = None
         self.k_nearest_neighbor_button = None
         self.k_nearest_messages_list = None
 
@@ -195,14 +194,6 @@ class MachineLearnerWindow(Window):
         self.k_entry = tk.Entry(k_nearest_neighbor_k_entry_frame, textvariable=k)
         self.k_entry.pack(side="right")
 
-        k_nearest_neighbor_split_entry_frame = tk.Frame(k_nearest_neighbor_form_frame)
-        k_nearest_neighbor_split_entry_frame.pack(side="top")
-
-        tk.Label(k_nearest_neighbor_split_entry_frame, text="Split").pack(side="left")
-        split = tk.DoubleVar()
-        self.split_entry = tk.Entry(k_nearest_neighbor_split_entry_frame, textvariable=split)
-        self.split_entry.pack(side="right")
-
         self.k_nearest_neighbor_button = tk.Button(k_nearest_neighbor_form_frame, text="Submit")
         self.k_nearest_neighbor_button.bind('<Button-1>', self.start_k_nearest_neighbor)
         self.k_nearest_neighbor_button.pack(side="bottom")
@@ -235,14 +226,13 @@ class MachineLearnerWindow(Window):
     def start_k_nearest_neighbor(self, event):
         print("Button clicked..")
         k = self.k_entry.get()
-        split = self.split_entry.get()
 
-        if k != 0 and split != 0:
-            message = 'machine_learner;' + k + ';' + split
+        if k != 0:
+            message = 'machine_learner;' + k
             print(message)
             self.gui.send_message(message.encode(ENCODING))
         else:
-            messagebox.showinfo('Warning', 'You must enter valid url and depth.')
+            messagebox.showinfo('Warning', 'You must enter valid k.')
         return 'break'
 
     def display_message(self, message):

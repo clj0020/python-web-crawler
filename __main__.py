@@ -56,14 +56,10 @@ class MainApplication(threading.Thread):
                         self.web_scraper = WebScraper(self, url, depth)
                         self.web_scraper.start()
                     elif msg[0] == 'machine_learner':
-
                         k = int(msg[1])
                         print('K', k)
 
-                        split = float(msg[2])
-                        print('Split', split)
-
-                        self.machine_learner.initialize_k_nearest_neighbor(k, split)
+                        self.machine_learner.initialize_k_nearest_neighbor(k)
 
 
     def create_machine_learner(self):
