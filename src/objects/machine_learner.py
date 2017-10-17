@@ -1,5 +1,6 @@
 import threading
 from .k_nearest_neighbor import KNearestNeighbor
+from .distance_weighted_k_nearest_neighbor import DistanceWeightedKNearestNeighbor
 
 class MachineLearner(threading.Thread):
 
@@ -7,6 +8,7 @@ class MachineLearner(threading.Thread):
         super().__init__(daemon=True, target=self.run)
         self.__client = client
         self.__k_nearest_neighbor = None
+        self.__distance_weighted_k_nearest_neighbor = None
 
 
     def run(self):
@@ -17,12 +19,21 @@ class MachineLearner(threading.Thread):
         return self.__k_nearest_neighbor
 
     @property
+    def distance_weighted_k_nearest_neighbor(self):
+        return self.__distance_weighted_k_nearest_neighbor
+
+    @property
     def client(self):
         return self.__client
 
     def initialize_k_nearest_neighbor(self, k):
         self.__k_nearest_neighbor = KNearestNeighbor(self, k)
         self.__k_nearest_neighbor.start()
+
+    def initialize_distance_weighted_k_nearest_neighbor(self, k):
+        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, k)
+        self.__distance_weighted_k_nearest_neighbor.start()
+
 
 
     # # Load the data into the training and test sets from the dataset file

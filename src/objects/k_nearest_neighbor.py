@@ -14,7 +14,7 @@ class KNearestNeighbor(threading.Thread):
 
 
     def run(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nKNearestNeighbor initialized...")
+        self.machine_learner.client.gui.machine_learner_window.display_message("\nK Nearest Neighbor initialized...")
         self.load_dataset()
         self.k_nearest_neighbor(self.k)
 

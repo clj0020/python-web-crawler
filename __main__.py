@@ -56,10 +56,15 @@ class MainApplication(threading.Thread):
                         self.web_scraper = WebScraper(self, url, depth)
                         self.web_scraper.start()
                     elif msg[0] == 'machine_learner':
-                        k = int(msg[1])
-                        print('K', k)
-
-                        self.machine_learner.initialize_k_nearest_neighbor(k)
+                        if msg[1] == 'k-nearest':
+                            k = int(msg[2])
+                            print('K', k)
+                            self.machine_learner.initialize_k_nearest_neighbor(k)
+                        elif msg[1] == 'distance-weighted':
+                            k = int(msg[2])
+                            option = bool(msg[3])
+                            print('K', k)
+                            self.machine_learner.initialize_distance_weighted_k_nearest_neighbor(k)
 
 
     def create_machine_learner(self):
