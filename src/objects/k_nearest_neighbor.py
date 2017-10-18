@@ -1,6 +1,7 @@
 import threading
 import math
 import operator
+import numpy as np
 
 class KNearestNeighbor(threading.Thread):
 
@@ -14,6 +15,7 @@ class KNearestNeighbor(threading.Thread):
     def run(self):
         self.machine_learner.client.gui.machine_learner_window.display_message("\nK Nearest Neighbor initialized...")
         self.load_dataset()
+        self.normalize_dataset()        
         self.k_nearest_neighbor(self.k)
 
     @property
@@ -42,6 +44,22 @@ class KNearestNeighbor(threading.Thread):
                 self.__dataset.append(array)
 
             myfile.close()
+
+    def get_magnitude(self, vector):
+        magnitude = 0
+        for x in range(2, 97):
+            magnitude += pow(vector[x], 2)
+        return math.sqrt(magnitude)
+
+    # Normalize the unigram vectors from the dataset
+    def normalize_dataset(self):
+        for x in range(len(self.dataset)):
+            magnitude = self.get_magnitude(self.dataset[x])
+            # set each unigram value as
+            for y in range(2, 97):
+                if magnitude != 0:
+                    self.__dataset[x][y] = self.dataset[x][y] / magnitude
+
 
     # Calculate the euclidean distance between every unigram feature vector in two datasets
     def euclidean_distance(self, dataset1, dataset2, length):

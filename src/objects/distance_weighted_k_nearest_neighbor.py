@@ -3,6 +3,12 @@ import threading
 import math
 import operator
 
+"""
+ Subclass of KNearestNeighbor.
+
+ Performs K-Nearest Neighbor on the dataset with
+ weights based on distance during predictions. Classifier can be 1 or -1.
+"""
 class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
 
     def __init__(self, machine_learner, k, is_global):
@@ -16,14 +22,17 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
     def run(self):
         self.machine_learner.client.gui.machine_learner_window.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
         self.load_dataset()
+        self.normalize_dataset()
         self.distance_weighted_k_nearest_neighbor(self.k)
 
     # Weight Formula for votes
     def get_weight(self, distance, weighting_exponent):
         if distance != 0:
+            # 1/distance^weighting_exponent is the weight formula
             return 1/(pow(distance, weighting_exponent))
+        # if distance is 0 then the weight would be one, maybe..
         else:
-            return 0
+            return 1
 
     def get_distances(self, training_set, test_instance, k):
         distances = []
@@ -39,7 +48,6 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
 
     def get_prediction(self, distances):
         classVotes = {}
-        # print(self.is_global)
         # if you want to look at all training sets
         if self.is_global:
             for x in range(len(distances)):
@@ -72,7 +80,7 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
 
             # Iterate through all of the neighbors
             for x in range(len(neighbors)):
-                weight = self.get_weight(neighborDistances[x], 2)                
+                weight = self.get_weight(neighborDistances[x], 2)
                 # response is equal to each neighbor's class attribute
                 response = neighbors[x][1]
                 # if the response has already been added to class votes array
