@@ -264,10 +264,10 @@ class MachineLearnerWindow():
 
     def start_distance_weighted_k_nearest_neighbor(self, event):
         k = self.weighted_k_entry.get()
-        option = self.weighted_option.get()
+        is_global = self.weighted_option.get()
 
         if k != 0:
-            message = 'machine_learner;' + 'distance-weighted;' + k + ';' + option
+            message = 'machine_learner;' + 'distance-weighted;' + k + ';' + str(is_global)
             print(message)
             self.gui.send_message(message.encode(ENCODING))
         else:

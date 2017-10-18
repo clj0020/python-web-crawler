@@ -30,8 +30,9 @@ class MachineLearner(threading.Thread):
         self.__k_nearest_neighbor = KNearestNeighbor(self, k)
         self.__k_nearest_neighbor.start()
 
-    def initialize_distance_weighted_k_nearest_neighbor(self, k):
-        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, k)
+    def initialize_distance_weighted_k_nearest_neighbor(self, k, is_global):
+        # print(is_global)
+        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, k, is_global)
         self.__distance_weighted_k_nearest_neighbor.start()
 
 

@@ -58,13 +58,15 @@ class MainApplication(threading.Thread):
                     elif msg[0] == 'machine_learner':
                         if msg[1] == 'k-nearest':
                             k = int(msg[2])
-                            print('K', k)
                             self.machine_learner.initialize_k_nearest_neighbor(k)
                         elif msg[1] == 'distance-weighted':
                             k = int(msg[2])
-                            option = bool(msg[3])
-                            print('K', k)
-                            self.machine_learner.initialize_distance_weighted_k_nearest_neighbor(k)
+                            if msg[3] == 'True':
+                                is_global = True
+                            elif msg[3] == 'False':
+                                is_global = False                            
+                            # print(is_global)
+                            self.machine_learner.initialize_distance_weighted_k_nearest_neighbor(k, is_global)
 
 
     def create_machine_learner(self):

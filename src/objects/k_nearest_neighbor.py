@@ -1,8 +1,6 @@
 import threading
 import math
 import operator
-import random
-from random import sample
 
 class KNearestNeighbor(threading.Thread):
 
@@ -54,14 +52,14 @@ class KNearestNeighbor(threading.Thread):
         return math.sqrt(distance)
 
     # Get the k amount of neighbors of a training set and a test instance
-    def get_neighbors(self, trainingSet, testInstance, k):
+    def get_neighbors(self, training_set, test_instance, k):
         distances = []
-        length = len(testInstance) - 1
+        length = len(test_instance) - 1
         # iterate through the training set
-        for x in range(len(trainingSet)):
+        for x in range(len(training_set)):
             # calculate the euclidean_distance of each instance to the test instance.
-            dist = self.euclidean_distance(testInstance, trainingSet[x], length)
-            distances.append((trainingSet[x], dist))
+            dist = self.euclidean_distance(test_instance, training_set[x], length)
+            distances.append((training_set[x], dist))
         # Sort the distances in ascending order
         distances.sort(key=operator.itemgetter(1))
         neighbors = []
@@ -72,7 +70,7 @@ class KNearestNeighbor(threading.Thread):
 
     # Get the prediction based on the neighbors
     # Get each neighbor to vote for what they think their class attribute (malicious: -1 or safe: 1) is and then take the majority vote as the prediction
-    def get_response(self, neighbors):
+    def get_prediction(self, neighbors):
         classVotes = {}
         # Iterate through all of the neighbors
         for x in range(len(neighbors)):
@@ -121,7 +119,7 @@ class KNearestNeighbor(threading.Thread):
             neighbors = self.get_neighbors(training_sets, test_set, k)
 
             # get the neighbors' majority vote for a prediction
-            prediction = self.get_response(neighbors)
+            prediction = self.get_prediction(neighbors)
             print('> predicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
             self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
 
