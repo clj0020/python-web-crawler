@@ -1,6 +1,13 @@
 import threading
+import json
+import operator
+import xlsxwriter
 from .k_nearest_neighbor import KNearestNeighbor
 from .distance_weighted_k_nearest_neighbor import DistanceWeightedKNearestNeighbor
+from .general_regression_neural_network import GeneralRegressionNeuralNetwork
+
+
+ENCODING = 'utf-8'
 
 class MachineLearner(threading.Thread):
 
@@ -9,6 +16,7 @@ class MachineLearner(threading.Thread):
         self.__client = client
         self.__k_nearest_neighbor = None
         self.__distance_weighted_k_nearest_neighbor = None
+        self.__grnn = None
 
 
     def run(self):
@@ -23,86 +31,76 @@ class MachineLearner(threading.Thread):
         return self.__distance_weighted_k_nearest_neighbor
 
     @property
+    def grnn(self):
+        return self.__grnn
+
+    @property
     def client(self):
         return self.__client
 
     def initialize_k_nearest_neighbor(self, k):
         self.__k_nearest_neighbor = KNearestNeighbor(self, k)
         self.__k_nearest_neighbor.start()
+        self.__k_nearest_neighbor.join()
+        self.__k_nearest_neighbor.k_nearest_neighbor(k)
+
+    def evaluate_k_nearest(self):
+        self.__k_nearest_neighbor = KNearestNeighbor(self, 0)
+        self.__k_nearest_neighbor.start()
+        self.__k_nearest_neighbor.join()
+        accuracies = self.__k_nearest_neighbor.evaluate_k()
+        accuracies_string = json.dumps(accuracies)
+
+        # message = 'machine_learner;' + 'show_accuracies_chart;' + accuracies_string
+        # self.client.queue.put(message.encode(ENCODING))
+
+        self.write_to_excel(accuracies, 'k-nearest-manhattan-accuracies.xlsx')
+
+        accuracies.sort(key=operator.itemgetter(1), reverse=True)
+
+        print("Best K Value: {}".format(accuracies[0]))
+        print("Second Best K Value: {}".format(accuracies[1]))
+        print("Third Best K Value: {}".format(accuracies[2]))
+        print("Fourth Best K Value: {}".format(accuracies[3]))
 
     def initialize_distance_weighted_k_nearest_neighbor(self, k, is_global):
-        # print(is_global)
         self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, k, is_global)
         self.__distance_weighted_k_nearest_neighbor.start()
+        self.__distance_weighted_k_nearest_neighbor.join()
+        self.__distance_weighted_k_nearest_neighbor.distance_weighted_k_nearest_neighbor(k)
 
 
+    def evaluate_distance_weighted_k_nearest(self, is_global):
+        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, 0, is_global)
+        self.__distance_weighted_k_nearest_neighbor.start()
+        self.__distance_weighted_k_nearest_neighbor.join()
+        accuracies = self.__distance_weighted_k_nearest_neighbor.evaluate_k()
 
-    # # Load the data into the training and test sets from the dataset file
-    # def load_dataset(self, split):
-    #     with open('datasets/our_dataset.txt') as myfile:
-    #         lines = myfile.readlines()
-    #         dataset = []
-    #
-    #         # Create a 2d array with the numbers in the dataset file
-    #         for line in lines:
-    #             array = []
-    #             for number in line.split():
-    #                 array.append(float(number))
-    #             dataset.append(array)
-    #
-    #         # Randomly add datasets to either test set or training set based on split
-    #         for x in range(len(dataset) - 1):
-    #             if random.random() < split:
-    #                 self.__training_set.append(dataset[x])
-    #             else:
-    #                 self.__test_set.append(dataset[x])
-    #         myfile.close()
-    #
-    # # Calculate the euclidean distance between every unigram feature vector in two datasets
-    # def euclidean_distance(self, dataset1, dataset2, length):
-    #     distance = 0
-    #     for x in range(length):
-    #         distance += pow((dataset1[x] - dataset2[x]), 2)
-    #     return math.sqrt(distance)
-    #
-    # def get_neighbors(self, trainingSet, testInstance, k):
-    #     distances = []
-    #     length = len(testInstance) - 1
-    #     for x in range(len(trainingSet)):
-    #         dist = self.euclidean_distance(testInstance, trainingSet[x], length)
-    #         distances.append((trainingSet[x], dist))
-    #     distances.sort(key=operator.itemgetter(1))
-    #     neighbors = []
-    #     for x in range(k):
-    #         neighbors.append(distances[x][0])
-    #     return neighbors
-    #
-    # def get_response(self, neighbors):
-    #     classVotes = {}
-    #     for x in range(len(neighbors)):
-    #         response = neighbors[x][1]
-    #         if response in classVotes:
-    #             classVotes[response] += 1
-    #         else:
-    #             classVotes[response] = 1
-    #     sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
-    #     return sortedVotes[0][0]
-    #
-    # def getAccuracy(self, testSet, predictions):
-    #     correct = 0
-    #     for x in range(len(testSet)):
-    #         if testSet[x][1] == predictions[x]:
-    #             correct += 1
-    #     return (correct / float(len(testSet))) * 100.0
-    #
-    # def k_nearest_neighbor(self):
-    #     # generate predictions
-    #     predictions = []
-    #     k = 3
-    #     for x in range(len(self.__test_set)):
-    #         neighbors = self.get_neighbors(self.__training_set, self.__test_set[x], k)
-    #         result = self.get_response(neighbors)
-    #         predictions.append(result)
-    #         print('> predicted=' + repr(result) + ', actual=' + repr(self.__test_set[x][1]))
-    #     accuracy = self.getAccuracy(self.__test_set, predictions)
-    #     print('Accuracy: ' + repr(accuracy) + '%')
+        accuracies_string = json.dumps(accuracies)
+
+        # message = 'machine_learner;' + 'show_distance_accuracies_chart;' + accuracies_string
+        # self.client.queue.put(message.encode(ENCODING))
+
+        self.write_to_excel(accuracies, 'local-distance-weighted-k-nearest-manhattan-accuracies.xlsx')
+
+        accuracies.sort(key=operator.itemgetter(1), reverse=True)
+
+        print("Best K Value (distance weighted): {}".format(accuracies[0]))
+        print("Second Best K Value (distance weighted): {}".format(accuracies[1]))
+        print("Third Best K Value (distance weighted): {}".format(accuracies[2]))
+        print("Fourth Best K Value (distance weighted): {}".format(accuracies[3]))
+
+    def initialize_grnn(self):
+        self.__grnn = GeneralRegressionNeuralNetwork(self)
+        self.__grnn.start()
+
+    def write_to_excel(self, accuracies, filename):
+        workbook = xlsxwriter.Workbook(filename)
+        worksheet = workbook.add_worksheet()
+
+        row = 0
+
+        for col, data in enumerate(accuracies):
+            worksheet.write_column(row, col, data)
+
+        workbook.close()

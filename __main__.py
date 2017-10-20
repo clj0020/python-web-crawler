@@ -2,6 +2,7 @@
 import threading
 import time
 import queue
+import json
 from gui import *
 from src import WebScraper
 from src import MachineLearner
@@ -28,7 +29,6 @@ class MainApplication(threading.Thread):
         # start the gui
         self.gui.start()
         # Only gui is non-daemon thread, therefore after closing gui app will quit
-
 
     def run(self):
         """Handle client-server communication using select module"""
@@ -73,6 +73,23 @@ class MainApplication(threading.Thread):
                             # get k and start the k nearest neighbor training
                             k = int(msg[2])
                             self.machine_learner.initialize_k_nearest_neighbor(k)
+                        # if the message is for evaluating k_nearest
+                        elif msg[1] == 'evaluate_k_nearest':
+                            self.machine_learner.evaluate_k_nearest()
+                        elif msg[1] == 'show_accuracies_chart':
+                            accuracies = json.loads(msg[2])
+                            print(accuracies)
+                            self.gui.machine_learner_window.display_k_nearest_graph(accuracies)
+                        elif msg[1] == 'evaluate_distance_k_nearest':
+                            if msg[2] == 'True':
+                                is_global = True
+                            elif msg[2] == 'False':
+                                is_global = False
+                            self.machine_learner.evaluate_distance_weighted_k_nearest(is_global)
+                        elif msg[1] == 'show_distance_accuracies_chart':
+                            accuracies = json.loads(msg[2])
+                            print(accuracies)
+                            self.gui.machine_learner_window.display_distance_k_nearest_graph(accuracies)
                         # if the message is for distance weighted k-nearest
                         elif msg[1] == 'distance-weighted':
                             # extract k and the global boolean value from the message
@@ -83,7 +100,8 @@ class MainApplication(threading.Thread):
                                 is_global = False
                             # Start the distance weighted knn algorithm.
                             self.machine_learner.initialize_distance_weighted_k_nearest_neighbor(k, is_global)
-
+                        elif msg[1] == 'grnn':
+                            self.machine_learner.initialize_grnn()
     # Initialize and create the machine learner object
     def create_machine_learner(self):
        self.machine_learner = MachineLearner(self)

@@ -6,3 +6,4 @@ uuid
 matplotlib
 numpy
 cx_Freeze
+xlsxwriter

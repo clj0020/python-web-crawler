@@ -23,7 +23,8 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         self.machine_learner.client.gui.machine_learner_window.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
         self.load_dataset()
         self.normalize_dataset()
-        self.distance_weighted_k_nearest_neighbor(self.k)
+
+        # self.evaluate_k()
 
     # Weight Formula for votes
     def get_weight(self, distance, weighting_exponent):
@@ -39,14 +40,18 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         length = len(test_instance) - 1
         # iterate through the training set
         for x in range(len(training_set)):
-            # calculate the euclidean_distance of each instance to the test instance.
-            dist = self.euclidean_distance(test_instance, training_set[x], length)
+            # # calculate the euclidean_distance of each instance to the test instance.
+            # dist = self.euclidean_distance(test_instance, training_set[x], length)
+
+            # calculate the manhattan_distance of each instance to the test instance.
+            dist = self.manhattan_distance(test_instance, training_set[x])
+
             distances.append((training_set[x], dist))
         # Sort the distances in ascending order
         distances.sort(key=operator.itemgetter(1))
         return distances;
 
-    def get_prediction(self, distances):
+    def get_prediction(self, distances, k):
         classVotes = {}
         # if you want to look at all training sets
         if self.is_global:
@@ -73,7 +78,7 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         else:
             neighbors = []
             neighborDistances = []
-            for x in range(self.k):
+            for x in range(k):
                 # iterate up to k and add each member of the training set that has the lowest distance to the test instance.
                 neighbors.append(distances[x][0])
                 neighborDistances.append(distances[x][1])
@@ -111,10 +116,7 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
 
             distances = self.get_distances(training_sets, test_set, k)
 
-            prediction = self.get_prediction(distances)
-
-            # print('> predicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
-            self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
+            prediction = self.get_prediction(distances, k)
 
             # add the neighbors' prediction to the predictions array
             predictions.append(prediction)
@@ -122,5 +124,17 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         # get the classification accuracy for all of the predictions
         accuracy = self.getAccuracy(self.dataset, predictions)
 
-        self.machine_learner.client.gui.machine_learner_window.display_message('\nAccuracy: ' + repr(accuracy) + '%')
-        print('Accuracy: ' + repr(accuracy) + '%')
+        self.machine_learner.client.gui.machine_learner_window.display_message('\nAccuracy: ' + repr(accuracy) + '%' + 'for k=' + repr(k))
+        print('Accuracy: ' + repr(accuracy) + '%' + ' Distance Weighted KNN')
+
+        return accuracy
+
+    # Find the most efficient K value.
+    def evaluate_k(self):
+        self.machine_learner.client.gui.machine_learner_window.display_message("\nEvaluating the best K value...\nThis might take a while...")
+        accuracies = []
+        for x in range(1, 101):
+            accuracy = self.distance_weighted_k_nearest_neighbor(x)
+            accuracies.append((x, accuracy))
+
+        return accuracies

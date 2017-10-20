@@ -15,6 +15,7 @@ class GUI(threading.Thread):
         self.client = client
         self.main_window = None
         self.machine_learner_window = None
+        self.web_crawler_window = None
 
     def run(self):
         self.main_window = MainWindow(self, self.font)
@@ -26,8 +27,8 @@ class GUI(threading.Thread):
         messagebox.showinfo('Error', message)
 
     def display_message(self, message):
-        """Display message in MainWindow"""
-        self.main_window.display_message(message)
+        """Display message in WebCrawler"""
+        self.web_crawler_window.display_message(message)
 
     def send_message(self, message):
         """Enqueue message in client's queue"""
@@ -38,6 +39,18 @@ class GUI(threading.Thread):
         self.client.create_machine_learner()
         self.machine_learner_window.run()
 
+    def open_web_crawler_window(self, root):
+        self.web_crawler_window = WebCrawlerWindow(self, self.font, root)
+        self.web_crawler_window.run()
+
+    # def show_k_accuracies_chart(self, accuracies):
+    #     k, accuracy = map(list,zip(*accuracies))
+    #     y_pos = np.arange(len(k))
+    #     plt.bar(y_pos, accuracy, align='center', alpha=0.5)
+    #     plt.xticks(y_pos, k)
+    #     plt.ylabel('Accuracy')
+    #     plt.title('Accuracy of Different K Values')
+    #     plt.show()
 
 class Window(object):
     def __init__(self, title, font):
@@ -46,11 +59,60 @@ class Window(object):
         self.root.title(title)
         self.font = font
 
-
 class MainWindow(Window):
     def __init__(self, gui, font):
-        super().__init__("Python Web Crawler", font)
+        super().__init__("Computational Intelligence Express", font)
         self.gui = gui
+        self.lock = threading.RLock()
+        self.open_machine_learner_window_button = None
+        self.open_web_crawler_window_button = None
+
+        self.build_window()
+        self.run()
+
+    def build_window(self):
+        """Build main window, set widgets positioning and event bindings"""
+
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(fill='both')
+
+        self.open_machine_learner_window_button = tk.Button(main_frame, text="Open Machine Learner")
+        self.open_machine_learner_window_button.bind('<Button-1>', self.open_machine_learner_window)
+        self.open_machine_learner_window_button.pack(side="left")
+
+        self.open_web_crawler_window_button = tk.Button(main_frame, text="Open Web Crawler")
+        self.open_web_crawler_window_button.bind('<Button-1>', self.open_web_crawler_window)
+        self.open_web_crawler_window_button.pack(side="right")
+
+        # Protocol for closing window using 'x' button
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
+
+    def run(self):
+        self.root.mainloop()
+
+    def exit_event(self, event):
+        """Quit app when "Exit" pressed"""
+        self.root.quit()
+
+    def on_closing_event(self):
+        """Exit window when 'x' button is pressed"""
+        self.exit_event(None)
+
+    def open_machine_learner_window(self, event):
+        """Open the Machine Learner Window"""
+        self.gui.open_machine_learner_window(self.root)
+
+    def open_web_crawler_window(self, event):
+        """Open the Machine Learner Window"""
+        self.gui.open_web_crawler_window(self.root)
+
+
+class WebCrawlerWindow():
+    def __init__(self, gui, font, root):
+        self.root = root
+        self.window = tk.Toplevel(self.root)
+        self.gui = gui
+        self.font = font
         self.lock = threading.RLock()
         self.target = ''
         self.url_entry = None
@@ -62,12 +124,11 @@ class MainWindow(Window):
         self.open_machine_learner_window_button = None
 
         self.build_window()
-        self.run()
 
     def build_window(self):
         """Build main window, set widgets positioning and event bindings"""
 
-        form_frame = tk.Frame(self.root)
+        form_frame = tk.Frame(self.window)
         form_frame.pack(fill='x')
 
         tk.Label(form_frame, text="Url").grid(row=0, column=0, sticky='W')
@@ -84,11 +145,7 @@ class MainWindow(Window):
         self.submit_button.bind('<Button-1>', self.send_entry_event)
         self.submit_button.grid(row=2, column=0, columnspan=1, sticky='W')
 
-        self.open_machine_learner_window_button = tk.Button(form_frame, text="Open Machine Learner")
-        self.open_machine_learner_window_button.bind('<Button-1>', self.open_machine_learner_window)
-        self.open_machine_learner_window_button.grid(row=2, column=1, columnspan=1, sticky='W')
-
-        url_list_frame = tk.Frame(self.root)
+        url_list_frame = tk.Frame(self.window)
         url_list_frame.pack(fill='x')
 
         self.url_list = tk.Listbox(url_list_frame, selectmode=tk.SINGLE, font=self.font,
@@ -96,13 +153,10 @@ class MainWindow(Window):
         self.url_list.bind('<<ListboxSelect>>', self.selected_url_event)
         self.url_list.pack(fill=tk.BOTH, expand=tk.YES)
 
-        # Protocol for closing window using 'x' button
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
-
     def run(self):
         """Handle chat window actions"""
-        self.root.mainloop()
-        self.root.destroy()
+        # self.root.mainloop()
+        # self.root.destroy()
 
     def selected_url_event(self, event):
         """Set as target currently selected login on login list"""
@@ -135,18 +189,6 @@ class MainWindow(Window):
             messagebox.showinfo('Warning', 'You must enter valid url and depth.')
         return 'break'
 
-    def open_machine_learner_window(self, event):
-        """Open the Machine Learner Window"""
-        self.gui.open_machine_learner_window(self.root)
-
-    def exit_event(self, event):
-        """Quit app when "Exit" pressed"""
-        self.root.quit()
-
-    def on_closing_event(self):
-        """Exit window when 'x' button is pressed"""
-        self.exit_event(None)
-
     def display_message(self, message):
         """Display message in ScrolledText widget"""
         with self.lock:
@@ -163,14 +205,15 @@ class MachineLearnerWindow():
         self.lock = threading.RLock()
         self.k_entry = None
         self.k_nearest_neighbor_button = None
+        self.k_nearest_test_button = None
 
         self.weighted_k_entry = None
         self.weighted_option = None
         self.weighted_global_checkbox = None
         self.weighted_k_nearest_neighbor_button = None
+        self.weighted_k_nearest_test_button = None
 
         self.general_regression_neural_network_button = None
-
         self.messages_list = None
 
         self.build_window()
@@ -206,9 +249,14 @@ class MachineLearnerWindow():
         self.k_entry = tk.Entry(k_nearest_neighbor_k_entry_frame, textvariable=k)
         self.k_entry.pack(side="right")
 
+        self.k_nearest_test_button = tk.Button(k_nearest_neighbor_form_frame, text="Find Best K-Value (Will Take Time)")
+        self.k_nearest_test_button.bind('<Button-1>', self.start_k_nearest_neighbor_evaluation)
+        self.k_nearest_test_button.pack(side="bottom")
+
         self.k_nearest_neighbor_button = tk.Button(k_nearest_neighbor_form_frame, text="Submit")
         self.k_nearest_neighbor_button.bind('<Button-1>', self.start_k_nearest_neighbor)
         self.k_nearest_neighbor_button.pack(side="bottom")
+
 
         weighted_k_nearest_neighbor_frame = tk.Frame(top_frame)
         weighted_k_nearest_neighbor_frame.pack(side="left")
@@ -233,6 +281,10 @@ class MachineLearnerWindow():
         self.weighted_global_checkbox = tk.Checkbutton(weighted_k_nearest_neighbor_options_frame, text="Global", variable=self.weighted_option)
         self.weighted_global_checkbox.pack()
 
+        self.weighted_k_nearest_test_button = tk.Button(weighted_k_nearest_neighbor_form_frame, text="Find Best K-Value (Will Take Time)")
+        self.weighted_k_nearest_test_button.bind('<Button-1>', self.start_distance_k_nearest_neighbor_evaluation)
+        self.weighted_k_nearest_test_button.pack(side="bottom")
+
         self.weighted_k_nearest_neighbor_button = tk.Button(weighted_k_nearest_neighbor_form_frame, text="Submit")
         self.weighted_k_nearest_neighbor_button.bind('<Button-1>', self.start_distance_weighted_k_nearest_neighbor)
         self.weighted_k_nearest_neighbor_button.pack(side="bottom")
@@ -240,7 +292,10 @@ class MachineLearnerWindow():
         general_regression_neural_network_frame = tk.Frame(top_frame)
         general_regression_neural_network_frame.pack(side="left")
 
+        tk.Label(general_regression_neural_network_frame, text="General Regression Neural Network").pack(side="top")
+
         self.general_regression_neural_network_button = tk.Button(general_regression_neural_network_frame, text="Submit")
+        self.general_regression_neural_network_button.bind('<Button-1>', self.start_general_regression_neural_network)
         self.general_regression_neural_network_button.pack()
 
         # ScrolledText widget for displaying messages
@@ -248,8 +303,8 @@ class MachineLearnerWindow():
         self.messages_list.configure(state='disabled')
         self.messages_list.pack(fill="x")
 
-        # Protocol for closing window using 'x' button
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
+        # # Protocol for closing window using 'x' button
+        # self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
 
     def start_k_nearest_neighbor(self, event):
         k = self.k_entry.get()
@@ -260,6 +315,11 @@ class MachineLearnerWindow():
             self.gui.send_message(message.encode(ENCODING))
         else:
             messagebox.showinfo('Warning', 'You must enter valid k.')
+        return 'break'
+
+    def start_k_nearest_neighbor_evaluation(self, event):
+        message = 'machine_learner;' + 'evaluate_k_nearest;'
+        self.gui.send_message(message.encode(ENCODING))
         return 'break'
 
     def start_distance_weighted_k_nearest_neighbor(self, event):
@@ -274,6 +334,18 @@ class MachineLearnerWindow():
             messagebox.showinfo('Warning', 'You must enter valid k.')
         return 'break'
 
+    def start_distance_k_nearest_neighbor_evaluation(self, event):
+        is_global = self.weighted_option.get()
+
+        message = 'machine_learner;' + 'evaluate_distance_k_nearest;' + str(is_global)
+        self.gui.send_message(message.encode(ENCODING))
+        return 'break'
+
+    def start_general_regression_neural_network(self, event):
+        message = 'machine_learner;' + 'grnn;'
+        self.gui.send_message(message.encode(ENCODING))
+        return 'break'
+
     def display_message(self, message):
         """Display message in ScrolledText widget"""
         with self.lock:
@@ -282,13 +354,45 @@ class MachineLearnerWindow():
             self.messages_list.configure(state='disabled')
             self.messages_list.see(tk.END)
 
-    def exit_event(self, event):
-        """Quit app when "Exit" pressed"""
-        self.root.quit()
+    def display_k_nearest_graph(self, accuracies):
+        with self.lock:
+            k, accuracy = [x[0] for x in accuracies],[x[1] for x in accuracies]
+            y_pos = np.arange(len(k))
 
-    def on_closing_event(self):
-        """Exit window when 'x' button is pressed"""
-        self.exit_event(None)
+            plt.title('Accuracy of Different K-Values (KNN)')
+            plt.ylabel('Accuracy')
+            plt.xlabel('K')
+
+            plt.bar(y_pos, accuracy, align='center', alpha=0.5)
+
+            # You can specify a rotation for the tick labels in degrees or with keywords.
+            plt.xticks(y_pos, k)
+            # Pad margins so that markers don't get clipped by the axes
+            plt.margins(0.2)
+            # Tweak spacing to prevent clipping of tick-labels
+            plt.subplots_adjust(bottom=0.15)
+
+            plt.savefig('k_nearest_accuracy_graph.png')
+
+    def display_distance_k_nearest_graph(self, accuracies):
+        with self.lock:
+            k, accuracy = [x[0] for x in accuracies],[x[1] for x in accuracies]
+            y_pos = np.arange(len(k))
+
+            plt.title('Accuracy of Different K-Values (Distance Weighted)')
+            plt.ylabel('Accuracy')
+            plt.xlabel('K')
+
+            plt.bar(y_pos, accuracy, align='center', alpha=0.5)
+
+            # You can specify a rotation for the tick labels in degrees or with keywords.
+            plt.xticks(y_pos, k)
+            # Pad margins so that markers don't get clipped by the axes
+            plt.margins(0.2)
+            # Tweak spacing to prevent clipping of tick-labels
+            plt.subplots_adjust(bottom=0.15)
+
+            plt.savefig('distance_weighted_k_nearest_accuracy_graph.png')
 
     def run(self):
         """Handle chat window actions"""
