@@ -120,7 +120,7 @@ class KNearestNeighbor(threading.Thread):
         for x in range(k):
             # iterate up to k and add each member of the training set that has the lowest distance to the test instance.
             neighbors.append(distances[x][0])
-        
+
         return neighbors
 
     # Get the prediction based on the neighbors
@@ -176,7 +176,7 @@ class KNearestNeighbor(threading.Thread):
             # get the neighbors' majority vote for a prediction
             prediction = self.get_prediction(neighbors)
             # print('> predicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
-            # self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
+            self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
 
             # add the neighbors' prediction to the predictions array
             predictions.append(prediction)

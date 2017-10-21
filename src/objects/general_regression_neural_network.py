@@ -29,7 +29,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         predictions = []
         for x in data:
             # result = self.grnn(x, training_sets, classification_sets, sigma)[0]
-            result = self.grnn(x, training_sets, classification_sets, 0.11853)[0]
+            result = self.grnn(x, training_sets, classification_sets, 0.008574707368937534)[0]
 
             if result < 0:
                 predictions.append(-1)
@@ -51,14 +51,18 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
             elif prediction == 1 and actualValue == -1:
                 falsePositive += 1
             elif prediction == -1 and actualValue == -1:
-                correct +=1
+                correct += 1
                 trueNegative += 1
             elif prediction == -1 and actualValue == 1:
                 falseNegative += 1
 
+            # if actualValue == prediction:
+            #     correct += 1
+
         accuracy = (correct / float(len(self.dataset))) * 100.0
 
         print(accuracy)
+        print("Correct: " + repr(correct))
         self.machine_learner.client.gui.machine_learner_window.display_message("\nAccuracy: " + repr(accuracy) + "%")
         self.machine_learner.client.gui.machine_learner_window.display_message("\nTrue Positives: " + repr(truePositive))
         self.machine_learner.client.gui.machine_learner_window.display_message("\nFalse Positives: " + repr(falsePositive))
@@ -142,13 +146,14 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
     def activator(self, data, train_x, sigma):
         distance = 0
         for i in range(len(data)):
-            distance += math.pow(data[i] - train_x[i], 2)
-        return math.exp(-distance / (math.pow(sigma, 2)))
+
+            distance += math.pow((data[i] - train_x[i]), 2)
+        # distance = (math.sqrt(distance))
+        # return math.exp(- math.pow(distance, 2) / (2* math.pow(sigma, 2)))
+        return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
 
     def grnn(self, data, training_set, classification_array, sigma):
-        # result is an array
         result = []
-        # out_dim is the length
         out_dim = len(classification_array[1])
         for dim in range(out_dim):
             factor, divide = 0, 0
