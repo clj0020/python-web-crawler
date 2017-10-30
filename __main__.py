@@ -6,6 +6,7 @@ import json
 from gui import *
 from src import WebScraper
 from src import MachineLearner
+from src import WebpageClassifier
 import numpy.core._methods
 import numpy.lib.format
 
@@ -23,6 +24,7 @@ class MainApplication(threading.Thread):
         self.gui = GUI(self)
         self.web_scraper = None
         self.machine_learner = None
+        self.webpage_classifier = None
 
         # start the application
         self.start()
@@ -63,6 +65,7 @@ class MainApplication(threading.Thread):
                         # get the url and depth from the message
                         url = msg[1]
                         depth = int(msg[2])
+                        # depth = msg[2]
                         # initialize the webscraper and start it
                         self.web_scraper = WebScraper(self, url, depth)
                         self.web_scraper.start()
@@ -102,10 +105,23 @@ class MainApplication(threading.Thread):
                             self.machine_learner.initialize_distance_weighted_k_nearest_neighbor(k, is_global)
                         elif msg[1] == 'grnn':
                             self.machine_learner.initialize_grnn()
+                    # if the message is for the webpage classifier part of the application
+                    elif msg[0] == 'webpage_classifier':
+                        # get the url from the message
+                        url = msg[1]
+                        
+                        self.webpage_classifier.scrape_site(url)
+
+
     # Initialize and create the machine learner object
     def create_machine_learner(self):
        self.machine_learner = MachineLearner(self)
        self.machine_learner.start()
+
+    # Initialize and create the webpage classifier object
+    def create_webpage_classifer(self):
+        self.webpage_classifier = WebpageClassifier(self)
+        self.webpage_classifier.start()
 
     # pull a node from the tree
     def get_node(self, node):

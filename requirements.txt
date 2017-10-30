@@ -7,3 +7,4 @@ matplotlib
 numpy
 cx_Freeze
 xlsxwriter
+pandas

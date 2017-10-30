@@ -19,7 +19,8 @@ class Tree:
         return self.__scraper
 
     def add_node(self, identifier, parent=None):
-        webpage = WebPage(identifier, self)
+        webpage = WebPage(self.scraper.client, identifier)
+        webpage.set_tree(self)
         self[identifier] = webpage
 
         if parent is not None:

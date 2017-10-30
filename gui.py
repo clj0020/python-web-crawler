@@ -16,6 +16,7 @@ class GUI(threading.Thread):
         self.main_window = None
         self.machine_learner_window = None
         self.web_crawler_window = None
+        self.webpage_classifier_window = None
 
     def run(self):
         self.main_window = MainWindow(self, self.font)
@@ -27,8 +28,11 @@ class GUI(threading.Thread):
         messagebox.showinfo('Error', message)
 
     def display_message(self, message):
-        """Display message in WebCrawler"""
-        self.web_crawler_window.display_message(message)
+        """Display message in Open Window"""
+        if self.web_crawler_window is None:
+            self.webpage_classifier_window.display_message(message)
+        elif self.webpage_classifier_window is None:
+            self.web_crawler_window.display_message(message)
 
     def send_message(self, message):
         """Enqueue message in client's queue"""
@@ -43,14 +47,10 @@ class GUI(threading.Thread):
         self.web_crawler_window = WebCrawlerWindow(self, self.font, root)
         self.web_crawler_window.run()
 
-    # def show_k_accuracies_chart(self, accuracies):
-    #     k, accuracy = map(list,zip(*accuracies))
-    #     y_pos = np.arange(len(k))
-    #     plt.bar(y_pos, accuracy, align='center', alpha=0.5)
-    #     plt.xticks(y_pos, k)
-    #     plt.ylabel('Accuracy')
-    #     plt.title('Accuracy of Different K Values')
-    #     plt.show()
+    def open_webpage_classifier_window(self, root):
+        self.webpage_classifier_window = WebPageClassifierWindow(self, self.font, root)
+        self.client.create_webpage_classifer()
+        self.webpage_classifier_window.run()
 
 class Window(object):
     def __init__(self, title, font):
@@ -66,6 +66,7 @@ class MainWindow(Window):
         self.lock = threading.RLock()
         self.open_machine_learner_window_button = None
         self.open_web_crawler_window_button = None
+        self.open_webpage_classifier_window_button = None
 
         self.build_window()
         self.run()
@@ -82,7 +83,11 @@ class MainWindow(Window):
 
         self.open_web_crawler_window_button = tk.Button(main_frame, text="Open Web Crawler")
         self.open_web_crawler_window_button.bind('<Button-1>', self.open_web_crawler_window)
-        self.open_web_crawler_window_button.pack(side="right")
+        self.open_web_crawler_window_button.pack(side="left")
+
+        self.open_webpage_classifier_window_button = tk.Button(main_frame, text="Open WebPage Classifier")
+        self.open_webpage_classifier_window_button.bind('<Button-1>', self.open_webpage_classifier_window)
+        self.open_webpage_classifier_window_button.pack(side="left")
 
         # Protocol for closing window using 'x' button
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
@@ -103,8 +108,12 @@ class MainWindow(Window):
         self.gui.open_machine_learner_window(self.root)
 
     def open_web_crawler_window(self, event):
-        """Open the Machine Learner Window"""
+        """Open the Web Crawler Window"""
         self.gui.open_web_crawler_window(self.root)
+
+    def open_webpage_classifier_window(self, event):
+        """Open the Webpage Classifier Window"""
+        self.gui.open_webpage_classifier_window(self.root)
 
 
 class WebCrawlerWindow():
@@ -396,3 +405,75 @@ class MachineLearnerWindow():
 
     def run(self):
         """Handle chat window actions"""
+
+class WebPageClassifierWindow():
+
+    def __init__(self, gui, font, root):
+        self.root = root
+        self.window = tk.Toplevel(self.root)
+        self.font = font
+        self.gui = gui
+        self.lock = threading.RLock()
+        self.url_entry = None
+        self.submit_button = None
+        self.messages_list = None
+
+        self.build_window()
+
+    def build_window(self):
+        """Build window, set widgets positioning and event bindings"""
+        # Size config
+        self.window.geometry('750x500')
+        self.window.minsize(600, 400)
+
+        main_frame = tk.Frame(self.window)
+        main_frame.pack(fill="both")
+
+        top_frame = tk.Frame(main_frame)
+        top_frame.pack(side="top", fill="x")
+
+        tk.Label(top_frame, text="Enter a URL to classify").pack(side="top")
+
+        webpage_classifier_form_frame = tk.Frame(top_frame)
+        webpage_classifier_form_frame.pack(side="top")
+
+        tk.Label(webpage_classifier_form_frame, text="URL").pack(side="left")
+        url = tk.StringVar()
+        self.url_entry = tk.Entry(webpage_classifier_form_frame, textvariable=url)
+        self.url_entry.pack(side="right")
+
+        self.submit_button = tk.Button(top_frame, text="Scrape Site")
+        self.submit_button.bind('<Button-1>', self.scrape_site)
+        self.submit_button.pack(side="bottom")
+
+        bottom_frame = tk.Frame(main_frame)
+        bottom_frame.pack(side="bottom", fill="x")
+
+        # ScrolledText widget for displaying messages
+        self.messages_list = scrolledtext.ScrolledText(bottom_frame, wrap='word', font=self.font)
+        self.messages_list.configure(state='disabled')
+        self.messages_list.pack(fill="x")
+
+
+    def scrape_site(self, event):
+        url = self.url_entry.get()
+
+        if url != '\n':
+            message = 'webpage_classifier;' + url
+            print(message)
+            self.gui.send_message(message.encode(ENCODING))
+        else:
+            messagebox.showinfo('Warning', 'You must enter valid url.')
+        return 'break'
+
+    def display_message(self, message):
+        """Display message in ScrolledText widget"""
+        with self.lock:
+            self.messages_list.configure(state='normal')
+            self.messages_list.insert(tk.END, message)
+            self.messages_list.configure(state='disabled')
+            self.messages_list.see(tk.END)
+
+
+    def run(self):
+        """Web page classifier window actions"""

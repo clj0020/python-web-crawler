@@ -12,7 +12,7 @@ options = {
     'build_exe': {
 
         'packages': packages,
-        "include_files": [r"C:\\Python36\\DLLs\\tcl86t.dll", r"C:\\Python36\\DLLs\\tk86t.dll", "gui.py","src/objects/node.py", "src/objects/web_page.py", "src/objects/tree.py", "src/objects/web_scraper.py", "html_files"]
+        "include_files": [r"C:\\Python36\\DLLs\\tcl86t.dll", r"C:\\Python36\\DLLs\\tk86t.dll", "gui.py","src/objects/node.py", "src/objects/web_page.py", "src/objects/tree.py", "src/objects/web_scraper.py", "src/objects/machine_learner.py", "src/objects/k_nearest_neighbor.py", "src/objects/distance_weighted_k_nearest_neighbor.py", "src/objects/general_regression_neural_network.py", "html_files"]
 
     },
 

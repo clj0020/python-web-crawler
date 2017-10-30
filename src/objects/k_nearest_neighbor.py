@@ -6,24 +6,24 @@ from decimal import Decimal
 
 class KNearestNeighbor(threading.Thread):
 
-    def __init__(self, machine_learner, k):
+    def __init__(self, client, k):
         super().__init__(daemon=True, target=self.run)
-        self.__machine_learner = machine_learner
+        self.__client = client
         self.__dataset = []
         self.__k = k
 
 
 
     def run(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nK Nearest Neighbor initialized...")
+        self.client.gui.display_message("\nK Nearest Neighbor initialized...")
         self.load_dataset()
         self.normalize_dataset()
         # self.k_nearest_neighbor(self.k)
         # self.evaluate_k()
 
     @property
-    def machine_learner(self):
-        return self.__machine_learner
+    def client(self):
+        return self.__client
 
     @property
     def dataset(self):
@@ -35,7 +35,8 @@ class KNearestNeighbor(threading.Thread):
 
     # Load the data into the training and test sets from the dataset file
     def load_dataset(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nLoading dataset...")
+        if self.client is not None:
+            self.client.gui.display_message("\nLoading dataset...")
         with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
 
@@ -56,7 +57,8 @@ class KNearestNeighbor(threading.Thread):
 
     # Normalize the unigram vectors from the dataset
     def normalize_dataset(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nNormalizing Data...")
+        if self.client is not None:
+            self.client.gui.display_message("\nNormalizing Data...")
         for x in range(len(self.dataset)):
             magnitude = self.get_magnitude(self.dataset[x])
             # set each unigram value as
@@ -161,7 +163,7 @@ class KNearestNeighbor(threading.Thread):
     # The actual k-nearest neighbor algorithm.
     def k_nearest_neighbor(self, k):
         """ Uses Leave One Out for Cross Validation """
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nStarting training...")
+        self.client.gui.display_message("\nStarting training...")
         predictions = []
 
         # Loop through dataset taking one set as test set and the rest as training sets
@@ -176,7 +178,7 @@ class KNearestNeighbor(threading.Thread):
             # get the neighbors' majority vote for a prediction
             prediction = self.get_prediction(neighbors)
             # print('> predicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
-            self.machine_learner.client.gui.machine_learner_window.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
+            self.client.gui.display_message('\npredicted=' + repr(prediction) + ', actual=' + repr(test_set[1]))
 
             # add the neighbors' prediction to the predictions array
             predictions.append(prediction)
@@ -184,13 +186,13 @@ class KNearestNeighbor(threading.Thread):
         # get the classification accuracy for all of the predictions
         accuracy = self.getAccuracy(self.dataset, predictions)
 
-        self.machine_learner.client.gui.machine_learner_window.display_message('\nAccuracy: ' + repr(accuracy) + '%' + ' for k=' + repr(k))
+        self.client.gui.display_message('\nAccuracy: ' + repr(accuracy) + '%' + ' for k=' + repr(k))
         print('Accuracy: ' + repr(accuracy) + '%' + ' KNN')
         return accuracy
 
     # Find the most efficient K value.
     def evaluate_k(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nEvaluating the best K value...\nThis might take a while...")
+        self.client.gui.display_message("\nEvaluating the best K value...\nThis might take a while...")
         accuracies = []
         for x in range(1, 101):
             accuracy = self.k_nearest_neighbor(x)

@@ -39,13 +39,13 @@ class MachineLearner(threading.Thread):
         return self.__client
 
     def initialize_k_nearest_neighbor(self, k):
-        self.__k_nearest_neighbor = KNearestNeighbor(self, k)
+        self.__k_nearest_neighbor = KNearestNeighbor(self.client, k)
         self.__k_nearest_neighbor.start()
         self.__k_nearest_neighbor.join()
         self.__k_nearest_neighbor.k_nearest_neighbor(k)
 
     def evaluate_k_nearest(self):
-        self.__k_nearest_neighbor = KNearestNeighbor(self, 0)
+        self.__k_nearest_neighbor = KNearestNeighbor(self.client, 0)
         self.__k_nearest_neighbor.start()
         self.__k_nearest_neighbor.join()
         accuracies = self.__k_nearest_neighbor.evaluate_k()

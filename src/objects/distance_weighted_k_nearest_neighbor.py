@@ -11,8 +11,8 @@ import operator
 """
 class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
 
-    def __init__(self, machine_learner, k, is_global):
-        super().__init__(machine_learner, k)
+    def __init__(self, client, k, is_global):
+        super().__init__(client, k)
         self.__is_global = is_global
 
     @property
@@ -20,7 +20,8 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         return self.__is_global
 
     def run(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
+        if self.client is not None:
+            self.client.gui.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
         self.load_dataset()
         self.normalize_dataset()
 
@@ -105,7 +106,7 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
     # The actual distance weighted k-nearest neighbor algorithm.
     def distance_weighted_k_nearest_neighbor(self, k):
         """ Uses Leave One Out for Cross Validation """
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nStarting training...")
+        self.client.gui.display_message("\nStarting training...")
         predictions = []
 
         # Loop through dataset taking one set as test set and the rest as training sets
@@ -124,14 +125,59 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         # get the classification accuracy for all of the predictions
         accuracy = self.getAccuracy(self.dataset, predictions)
 
-        self.machine_learner.client.gui.machine_learner_window.display_message('\nAccuracy: ' + repr(accuracy) + '%' + 'for k=' + repr(k))
+        self.client.gui.display_message('\nAccuracy: ' + repr(accuracy) + '%' + 'for k=' + repr(k))
         print('Accuracy: ' + repr(accuracy) + '%' + ' Distance Weighted KNN')
 
         return accuracy
 
+    def get_predicted_classification_value(self, distances, k):
+        prediction = 0
+        # if you want to look at all training sets
+        if self.is_global:
+            for x in range(len(distances)):
+                # get the distance of the training set to the test set
+                distance = distances[x][1]
+                # get the weight of the training set
+                weight = self.get_weight(distance, 2)
+                # get the training set's classification
+                response = distances[x][0][1]
+
+                prediction += response
+
+            return prediction / len(distances)
+        else:
+            neighbors = []
+            neighborDistances = []
+            for x in range(k):
+                # iterate up to k and add each member of the training set that has the lowest distance to the test instance.
+                neighbors.append(distances[x][0])
+                neighborDistances.append(distances[x][1])
+
+            # Iterate through all of the neighbors
+            for x in range(len(neighbors)):
+                weight = self.get_weight(neighborDistances[x], 2)
+                # response is equal to each neighbor's class attribute
+                response = neighbors[x][1]
+
+                prediction += response
+
+            return prediction / len(neighbors)
+
+    def distance_weighted_k_nearest_neighbor_single(self, k, test_set):
+        """ Uses Leave One Out for Cross Validation """
+        predictions = []
+
+        test_set = test_set
+        training_sets = self.dataset
+        distances = self.get_distances(training_sets, test_set, k)
+        prediction = self.get_predicted_classification_value(distances, k)
+
+        print('Predicted: ' + repr(prediction))
+        self.client.gui.display_message("\nPredicted: " + repr(prediction))
+
     # Find the most efficient K value.
     def evaluate_k(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nEvaluating the best K value...\nThis might take a while...")
+        self.client.gui.display_message("\nEvaluating the best K value...\nThis might take a while...")
         accuracies = []
         for x in range(1, 101):
             accuracy = self.distance_weighted_k_nearest_neighbor(x)
