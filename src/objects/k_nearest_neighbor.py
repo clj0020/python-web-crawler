@@ -40,6 +40,8 @@ class KNearestNeighbor(threading.Thread):
         with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
 
+            print("Number of Datasets: " + repr(len(lines)))
+
             # Create a 2d array with the numbers in the dataset file
             for line in lines:
                 array = []
@@ -104,10 +106,10 @@ class KNearestNeighbor(threading.Thread):
         # iterate through the training set
         for x in range(len(training_set)):
             # calculate the euclidean_distance of each instance to the test instance.
-            dist = self.euclidean_distance(test_instance, training_set[x], length)
+            # dist = self.euclidean_distance(test_instance, training_set[x], length)
 
             # calculate the manhattan_distance of each instance to the test instance.
-            # dist = self.manhattan_distance(test_instance, training_set[x])
+            dist = self.manhattan_distance(test_instance, training_set[x])
 
             # calculate the cosine_similarity of each instance to the test instance.
             # dist = self.cosine_similarity(test_instance, training_set[x])

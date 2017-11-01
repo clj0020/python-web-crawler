@@ -29,9 +29,11 @@ class GUI(threading.Thread):
 
     def display_message(self, message):
         """Display message in Open Window"""
-        if self.web_crawler_window is None:
+        if self.web_crawler_window is None and self.webpage_classifier_window is None:
+            self.machine_learner_window.display_message(message)
+        elif self.web_crawler_window is None and self.machine_learner_window is None:
             self.webpage_classifier_window.display_message(message)
-        elif self.webpage_classifier_window is None:
+        elif self.webpage_classifier_window is None and self.machine_learner_window is None:
             self.web_crawler_window.display_message(message)
 
     def send_message(self, message):
@@ -416,6 +418,7 @@ class WebPageClassifierWindow():
         self.lock = threading.RLock()
         self.url_entry = None
         self.submit_button = None
+        self.add_webpages_to_dataset_button = None
         self.messages_list = None
 
         self.build_window()
@@ -446,6 +449,10 @@ class WebPageClassifierWindow():
         self.submit_button.bind('<Button-1>', self.scrape_site)
         self.submit_button.pack(side="bottom")
 
+        self.add_webpages_to_dataset_button = tk.Button(top_frame, text="Add Webpages to Dataset")
+        self.add_webpages_to_dataset_button.bind('<Button-1>', self.add_webpages_to_dataset)
+        self.add_webpages_to_dataset_button.pack(side="bottom")
+
         bottom_frame = tk.Frame(main_frame)
         bottom_frame.pack(side="bottom", fill="x")
 
@@ -459,12 +466,17 @@ class WebPageClassifierWindow():
         url = self.url_entry.get()
 
         if url != '\n':
-            message = 'webpage_classifier;' + url
+            message = 'webpage_classifier;' + 'scrape_site;' + url
             print(message)
             self.gui.send_message(message.encode(ENCODING))
         else:
             messagebox.showinfo('Warning', 'You must enter valid url.')
         return 'break'
+
+    def add_webpages_to_dataset(self, event):
+        message = 'webpage_classifier;' + 'add_webpages;'
+        self.gui.send_message(message.encode(ENCODING))
+
 
     def display_message(self, message):
         """Display message in ScrolledText widget"""

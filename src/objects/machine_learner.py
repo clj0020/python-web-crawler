@@ -64,14 +64,14 @@ class MachineLearner(threading.Thread):
         print("Fourth Best K Value: {}".format(accuracies[3]))
 
     def initialize_distance_weighted_k_nearest_neighbor(self, k, is_global):
-        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, k, is_global)
+        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self.client, k, is_global)
         self.__distance_weighted_k_nearest_neighbor.start()
         self.__distance_weighted_k_nearest_neighbor.join()
         self.__distance_weighted_k_nearest_neighbor.distance_weighted_k_nearest_neighbor(k)
 
 
     def evaluate_distance_weighted_k_nearest(self, is_global):
-        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self, 0, is_global)
+        self.__distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self.client, 0, is_global)
         self.__distance_weighted_k_nearest_neighbor.start()
         self.__distance_weighted_k_nearest_neighbor.join()
         accuracies = self.__distance_weighted_k_nearest_neighbor.evaluate_k()
