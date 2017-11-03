@@ -16,13 +16,12 @@ class WebPage(Node):
         super().__init__(url)
 
         self.__client = client
-
-        self.__filename = self.create_filename()
-        self.__soup = self.scrape_site()
+        # self.__soup = self.scrape_site()
         self.__frequency = None
         self.__tree = None
+        # self.__filename = None
 
-        self.save_file()
+        # self.save_file()
         # file_save = threading.Thread(target=self.save_file, daemon=True)
         # file_save.start()
 
@@ -76,6 +75,10 @@ class WebPage(Node):
         return self.children
 
     def save_file(self):
+        self.__soup = self.scrape_site()
+
+        self.__filename = self.create_filename()
+
         with io.open('html_files/' + self.filename + '.txt', "wb") as f:
             f.write(self.soup.encode("ascii"))
 

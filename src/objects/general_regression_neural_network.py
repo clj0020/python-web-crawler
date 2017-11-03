@@ -21,15 +21,15 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
     def run(self):
         self.load_dataset()
         self.normalize_dataset()
-        # sigma = self.d_max()
+        sigma = self.d_max()
         training_sets, classification_sets = self.split_array()
 
         data = training_sets[:]
         self.machine_learner.client.gui.machine_learner_window.display_message("\nRunning GRNN...")
         predictions = []
         for x in data:
-            # result = self.grnn(x, training_sets, classification_sets, sigma)[0]
-            result = self.grnn(x, training_sets, classification_sets, 0.008574707368937534)[0]
+            result = self.grnn(x, training_sets, classification_sets, sigma)[0]
+            #result = self.grnn(x, training_sets, classification_sets, 0.008574707368937534)[0]
 
             if result < 0:
                 predictions.append(-1)
@@ -134,7 +134,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
             training_sets = [t for i,t in enumerate(self.dataset) if i!=x]
 
             for y in range(len(training_sets) - 1):
-                dist = self.euclidean_distance(test_set, training_sets[y])
+                dist = self.manhattan_distance(test_set, training_sets[y])
                 distances.append((training_sets[y], dist))
 
         # Sort the distances in ascending order
@@ -144,12 +144,13 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         return distances[0][1];
 
     def activator(self, data, train_x, sigma):
+        # distance = self.manhattan_distance(data, train_x)
         distance = 0
-        for i in range(len(data)):
+        # for all unigram values in the unigram vectors
+        for x in range(len(data)):
+            # add the absolute value of the two values subtracted
+            distance += abs(data[x] - train_x[x])
 
-            distance += math.pow((data[i] - train_x[i]), 2)
-        # distance = (math.sqrt(distance))
-        # return math.exp(- math.pow(distance, 2) / (2* math.pow(sigma, 2)))
         return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
 
     def grnn(self, data, training_set, classification_array, sigma):

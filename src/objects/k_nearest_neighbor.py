@@ -37,6 +37,7 @@ class KNearestNeighbor(threading.Thread):
     def load_dataset(self):
         if self.client is not None:
             self.client.gui.display_message("\nLoading dataset...")
+
         with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
 

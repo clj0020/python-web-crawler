@@ -419,6 +419,7 @@ class WebPageClassifierWindow():
         self.url_entry = None
         self.submit_button = None
         self.add_webpages_to_dataset_button = None
+        self.balance_dataset_button = None
         self.messages_list = None
 
         self.build_window()
@@ -445,13 +446,20 @@ class WebPageClassifierWindow():
         self.url_entry = tk.Entry(webpage_classifier_form_frame, textvariable=url)
         self.url_entry.pack(side="right")
 
-        self.submit_button = tk.Button(top_frame, text="Scrape Site")
-        self.submit_button.bind('<Button-1>', self.scrape_site)
-        self.submit_button.pack(side="bottom")
 
         self.add_webpages_to_dataset_button = tk.Button(top_frame, text="Add Webpages to Dataset")
         self.add_webpages_to_dataset_button.bind('<Button-1>', self.add_webpages_to_dataset)
         self.add_webpages_to_dataset_button.pack(side="bottom")
+
+        self.balance_dataset_button = tk.Button(top_frame, text="Balance Dataset")
+        self.balance_dataset_button.bind('<Button-1>', self.balance_dataset)
+        self.balance_dataset_button.pack(side="bottom")
+
+        self.submit_button = tk.Button(top_frame, text="Scrape Site")
+        self.submit_button.bind('<Button-1>', self.scrape_site)
+        self.submit_button.pack(side="bottom")
+
+
 
         bottom_frame = tk.Frame(main_frame)
         bottom_frame.pack(side="bottom", fill="x")
@@ -477,6 +485,9 @@ class WebPageClassifierWindow():
         message = 'webpage_classifier;' + 'add_webpages;'
         self.gui.send_message(message.encode(ENCODING))
 
+    def balance_dataset(self, event):
+        message = 'webpage_classifier;' + 'balance_dataset;'
+        self.gui.send_message(message.encode(ENCODING))
 
     def display_message(self, message):
         """Display message in ScrolledText widget"""
