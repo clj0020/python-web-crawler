@@ -7,6 +7,8 @@ from gui import *
 from src import WebScraper
 from src import MachineLearner
 from src import WebpageClassifier
+from src import WebPage
+from src import SteadyStateGenetic
 import numpy.core._methods
 import numpy.lib.format
 
@@ -111,7 +113,8 @@ class MainApplication(threading.Thread):
                             # get the url from the message
                             url = msg[2]
 
-                            self.webpage_classifier.scrape_site(url)
+                            webpage = self.webpage_classifier.add_site(url)
+                            self.webpage_classifier.scrape_site(webpage)
                         elif msg[1] == 'add_webpages':
                             webpages = []
 
@@ -164,7 +167,16 @@ class MainApplication(threading.Thread):
 
                         elif msg[1] == 'balance_dataset':
                             self.webpage_classifier.balance_dataset()
+                    elif msg[0] == 'steady_state':
+                        # steady_state_genetic = SteadyStateGenetic()
+                        # steady_state_genetic.start()
 
+                        # Run the steady state genetic algorithm on the population
+                        ssga = SteadyStateGenetic(self)
+                        ssga.start()
+                        ssga.join()
+
+                        self.population = ssga.steady_state_genetic_algorithm()
 
     # Initialize and create the machine learner object
     def create_machine_learner(self):

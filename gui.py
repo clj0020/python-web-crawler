@@ -69,6 +69,7 @@ class MainWindow(Window):
         self.open_machine_learner_window_button = None
         self.open_web_crawler_window_button = None
         self.open_webpage_classifier_window_button = None
+        self.run_steady_state_genetic_button = None
 
         self.build_window()
         self.run()
@@ -90,6 +91,10 @@ class MainWindow(Window):
         self.open_webpage_classifier_window_button = tk.Button(main_frame, text="Open WebPage Classifier")
         self.open_webpage_classifier_window_button.bind('<Button-1>', self.open_webpage_classifier_window)
         self.open_webpage_classifier_window_button.pack(side="left")
+
+        self.run_steady_state_genetic_button = tk.Button(main_frame, text="Run Steady State")
+        self.run_steady_state_genetic_button.bind('<Button-1>', self.run_steady_state)
+        self.run_steady_state_genetic_button.pack(side="left")
 
         # Protocol for closing window using 'x' button
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing_event)
@@ -116,6 +121,12 @@ class MainWindow(Window):
     def open_webpage_classifier_window(self, event):
         """Open the Webpage Classifier Window"""
         self.gui.open_webpage_classifier_window(self.root)
+
+    def run_steady_state(self, event):
+        message = 'steady_state;'        
+        self.gui.send_message(message.encode(ENCODING))
+
+        return 'break'
 
 
 class WebCrawlerWindow():

@@ -54,13 +54,18 @@ class WebPage(Node):
         return filename
 
     def scrape_site(self):
-        response = requests.get(self.identifier)
-        html = response.content
-        soup = BeautifulSoup(html, 'html.parser')
+        try:
+            response = requests.get(self.identifier)
+            html = response.content
+            soup = BeautifulSoup(html, 'html.parser')
 
-        print("Scraped {}...".format(self.identifier))
+            # print("Scraped {}...".format(self.identifier))
 
-        return soup
+            return soup
+
+        except requests.exceptions.RequestException as e:
+            print("ERROR!!!!!!!!!!!!!!!!!!! AH!!!")
+            return None
 
     def find_children(self):
         for link in self.soup.find_all('a', href=True):
@@ -75,18 +80,20 @@ class WebPage(Node):
         return self.children
 
     def save_file(self):
+
         self.__soup = self.scrape_site()
 
-        self.__filename = self.create_filename()
+        if self.__soup != None:
+            self.__filename = self.create_filename()
 
-        with io.open('html_files/' + self.filename + '.txt', "wb") as f:
-            f.write(self.soup.encode("ascii"))
+            with io.open('html_files/' + self.filename + '.txt', "wb") as f:
+                f.write(self.soup.encode("ascii"))
 
-        print("Saved file for {}".format(self.identifier))
+            self.__frequency = self.unigram_extraction()
 
-        self.__frequency = self.unigram_extraction()
-
-        self.client.gui.display_message('\nURL: ' + repr(self.identifier))
+            self.client.gui.display_message('\nURL: ' + repr(self.identifier))
+        else:
+            self.__frequency = None
 
     def unigram_extraction(self):
         ascii_string = set(""" !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~""")

@@ -91,8 +91,10 @@ class MachineLearner(threading.Thread):
         print("Fourth Best K Value (distance weighted): {}".format(accuracies[3]))
 
     def initialize_grnn(self):
-        self.__grnn = GeneralRegressionNeuralNetwork(self)
+        self.__grnn = GeneralRegressionNeuralNetwork(self.client)
         self.__grnn.start()
+        self.__grnn.join()
+        self.__grnn.train()
 
     def write_to_excel(self, accuracies, filename):
         workbook = xlsxwriter.Workbook(filename)

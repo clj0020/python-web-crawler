@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import urllib.request
 from .web_page import WebPage
 from .distance_weighted_k_nearest_neighbor import DistanceWeightedKNearestNeighbor
+from .general_regression_neural_network import GeneralRegressionNeuralNetwork
 
 class WebpageClassifier(threading.Thread):
 
@@ -46,9 +47,12 @@ class WebpageClassifier(threading.Thread):
     def scrape_site(self, webpage):
         # print("Scraping site: {}".format(url))
         # webpage = WebPage(self.client, url)
+
+
         frequency = webpage.frequency
 
-        print(len(frequency))
+        if frequency is None:
+            return None
 
         # extract the chars and their unigram_vector into two lists
         chars, unigram_vector = map(list,zip(*frequency))
@@ -60,22 +64,26 @@ class WebpageClassifier(threading.Thread):
         for x in range(len(unigram_vector)):
             unigram_vector[x] = unigram_vector[x] / sum
 
-        self.normalize_dataset(unigram_vector)
+        unigram_vector = self.normalize_dataset(unigram_vector)
 
         classification = 0 # temp
 
         unigram_vector.insert(0, classification)
         unigram_vector.insert(0, len(self.dataset))
 
-        distance_weighted_k_nearest_neighbor = DistanceWeightedKNearestNeighbor(self.client, 6, False)
-        distance_weighted_k_nearest_neighbor.start()
-        distance_weighted_k_nearest_neighbor.join()
-        distance_weighted_k_nearest_neighbor.distance_weighted_k_nearest_neighbor_single(6, unigram_vector)
+        grnn = GeneralRegressionNeuralNetwork(self.client)
+        grnn.start()
+        grnn.join()
+        prediction = grnn.single(unigram_vector)
 
-        actual = self.check_classification(webpage.identifier)
+        self.client.gui.display_message("\nPrediction: " + repr(prediction))
 
-        self.client.gui.display_message("\nActual: " + repr(actual))
-        unigram_vector[1] = actual
+        unigram_vector[1] = prediction
+
+        # actual = self.check_classification(webpage.identifier)
+        #
+        # self.client.gui.display_message("\nActual: " + repr(actual))
+        # unigram_vector[1] = actual
 
         return unigram_vector
 
@@ -171,3 +179,7 @@ class WebpageClassifier(threading.Thread):
         for x in range(len(dataset)):
             if magnitude != 0:
                 dataset[x] = dataset[x] / magnitude
+        return dataset
+
+    def add_site(self, url):
+        return WebPage(self.client, url)

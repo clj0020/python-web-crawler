@@ -5,27 +5,31 @@ import numpy as np
 
 class GeneralRegressionNeuralNetwork(threading.Thread):
 
-    def __init__(self, machine_learner):
+    def __init__(self, client):
         super().__init__(daemon=False, target=self.run)
         self.__dataset = []
-        self.__machine_learner = machine_learner
+        self.__client = client
 
     @property
     def dataset(self):
         return self.__dataset
 
     @property
-    def machine_learner(self):
-        return self.__machine_learner
+    def client(self):
+        return self.__client
 
     def run(self):
         self.load_dataset()
         self.normalize_dataset()
-        sigma = self.d_max()
+        # print(self.dataset)
+
+    def train(self):
+        # sigma = self.d_max()
+        sigma = 0.11853
         training_sets, classification_sets = self.split_array()
 
         data = training_sets[:]
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nRunning GRNN...")
+        # self.client.gui.display_message("\nRunning GRNN...")
         predictions = []
         for x in data:
             result = self.grnn(x, training_sets, classification_sets, sigma)[0]
@@ -63,16 +67,30 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
 
         print(accuracy)
         print("Correct: " + repr(correct))
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nAccuracy: " + repr(accuracy) + "%")
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nTrue Positives: " + repr(truePositive))
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nFalse Positives: " + repr(falsePositive))
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nTrue Negatives: " + repr(trueNegative))
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nFalse Negatives: " + repr(falseNegative))
+        self.client.gui.display_message("\nAccuracy: " + repr(accuracy) + "%")
+        self.client.gui.display_message("\nTrue Positives: " + repr(truePositive))
+        self.client.gui.display_message("\nFalse Positives: " + repr(falsePositive))
+        self.client.gui.display_message("\nTrue Negatives: " + repr(trueNegative))
+        self.client.gui.display_message("\nFalse Negatives: " + repr(falseNegative))
+
+    def single(self, unigram_vector):
+        # sigma = self.d_max()
+        sigma = 0.11853
+        training_sets, classification_sets = self.split_array()
+
+        # self.client.gui.display_message("\nRunning GRNN...")
+
+        prediction = self.grnn(unigram_vector[2:97], training_sets, classification_sets, sigma)[0]
+
+        return prediction
+
+
 
     # Load the data into the training and test sets from the dataset file
     def load_dataset(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nLoading dataset...")
-        with open('datasets/our_dataset.txt') as myfile:
+        # self.client.gui.display_message("\nLoading dataset...")
+        # with open('datasets/our_dataset.txt') as myfile:
+        with open('datasets/our_dataset_og.txt') as myfile:
             lines = myfile.readlines()
 
             # Create a 2d array with the numbers in the dataset file
@@ -100,7 +118,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
 
     # Normalize the unigram vectors from the dataset
     def normalize_dataset(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nNormalizing dataset...")
+        self.client.gui.display_message("\nNormalizing dataset...")
         for x in range(len(self.dataset)):
             magnitude = self.get_magnitude(self.dataset[x])
             # set each unigram value as
@@ -125,7 +143,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         return math.sqrt(distance)
 
     def d_max(self):
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nFinding sigma...")
+        self.client.gui.display_message("\nFinding sigma...")
         distances = []
         for x in range(len(self.dataset) - 1):
             test_set = self.dataset[x]
@@ -140,18 +158,21 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         # Sort the distances in ascending order
         distances.sort(key=operator.itemgetter(1), reverse=True)
 
-        self.machine_learner.client.gui.machine_learner_window.display_message("\nSigma=" + repr(distances[0][1]))
+        self.client.gui.display_message("\nSigma=" + repr(distances[0][1]))
         return distances[0][1];
 
     def activator(self, data, train_x, sigma):
-        # distance = self.manhattan_distance(data, train_x)
+
         distance = 0
         # for all unigram values in the unigram vectors
         for x in range(len(data)):
             # add the absolute value of the two values subtracted
             distance += abs(data[x] - train_x[x])
+            # distance += math.pow(data[x] - train_x[x], 2)
+        return math.exp(-distance / (math.pow(sigma, 2)))
 
-        return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
+        # return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
+
 
     def grnn(self, data, training_set, classification_array, sigma):
         result = []
@@ -162,5 +183,5 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
                 cache = self.activator(data, training_set[i], sigma)
                 factor += classification_array[i][dim] * cache
                 divide += cache
-            result.append(factor/divide)
+            result.append(factor / divide)
         return result

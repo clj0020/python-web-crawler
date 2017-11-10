@@ -38,7 +38,8 @@ class KNearestNeighbor(threading.Thread):
         if self.client is not None:
             self.client.gui.display_message("\nLoading dataset...")
 
-        with open('datasets/our_dataset.txt') as myfile:
+        # with open('datasets/our_dataset.txt') as myfile:
+        with open('datasets/our_dataset_og.txt') as myfile:
             lines = myfile.readlines()
 
             print("Number of Datasets: " + repr(len(lines)))
