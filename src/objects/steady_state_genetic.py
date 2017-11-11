@@ -13,6 +13,7 @@ class SteadyStateGenetic(threading.Thread):
         super().__init__(daemon=True, target=self.run)
         self.client = client
         self.population = []
+        self.overall_population = []
 
     def run(self):
         self.grnn = GeneralRegressionNeuralNetwork(self.client)
@@ -24,7 +25,7 @@ class SteadyStateGenetic(threading.Thread):
         random.seed()
         self.create_population(20)
         generation = 0
-        while generation != 180:
+        while generation != 10:
 
             mother, mother_index, mother_fitness = self.tournament_selection(self.population, 3)
             father, father_index, father_fitness = self.tournament_selection(self.population, 3)
@@ -43,13 +44,9 @@ class SteadyStateGenetic(threading.Thread):
 
             generation = generation + 1
             print("Generation #" + repr(generation) + " Best Fitness: " + repr(fitnesses[0][1]))
-            # print(fitnesses[0][1])
-            # if fitnesses[0][1] == 1:
-            #     print("Found a fitness that is 1." + repr(self.population))
-            #     break
-        print('Prediction Population[0]: ' + repr(self.grnn.single(self.population[0])))
-        print('Prediction Population[1]: ' + repr(self.grnn.single(self.population[1])))
-        print('Prediction Population[2]: ' + repr(self.grnn.single(self.population[2])))
+
+            for x in range(len(self.population)):
+                self.overall_population.append(self.population[x])
 
         return self.population
 
@@ -98,7 +95,9 @@ class SteadyStateGenetic(threading.Thread):
             unigram_vector.insert(0, 1.0)
             unigram_vector.insert(0, 1.0)
             self.population.append(unigram_vector)
+
         self.normalize_population()
+        # self.overall_population.append(self.population)
 
     def normalize_population(self):
         for x in range(len(self.population)):
@@ -112,3 +111,36 @@ class SteadyStateGenetic(threading.Thread):
         for x in range(2, 97):
             magnitude += pow(vector[x], 2)
         return math.sqrt(magnitude)
+
+    def evaluate_overall_population(self):
+        print("# of Vectors in Overall Population: " + repr(len(self.overall_population)))
+
+        num_sites_in_interval = 0
+        predictions = []
+        for x in range(len(self.overall_population)):
+            prediction = self.grnn.single(self.overall_population[x])
+            predictions.append(prediction)
+
+            if prediction >= -0.015 and prediction <= 0.015:
+                num_sites_in_interval = num_sites_in_interval + 1
+
+        standard_deviation_first = np.std(predictions[0:99])
+        mean_first = np.mean(predictions[0:99])
+
+        print("Standard Deviation of First 100 sites scraped: " + repr(standard_deviation_first))
+        print("Mean of First 100 sites scraped: " + repr(mean_first))
+
+        standard_deviation_last = np.std(predictions[100:199])
+        mean_last = np.mean(predictions[100:199])
+
+        print("Standard Deviation of Last 100 sites scraped: " + repr(standard_deviation_last))
+        print("Mean of Last 100 sites scraped: " + repr(mean_last))
+
+
+        standard_deviation_overall = np.std(predictions)
+        mean_overall = np.mean(predictions)
+
+        print("Standard Deviation of 200 sites scraped: " + repr(standard_deviation_overall))
+        print("Mean of 200 sites scraped: " + repr(mean_overall))
+
+        print("Number of Sites in the interval [-0.015, 0.015]: " + repr(num_sites_in_interval))

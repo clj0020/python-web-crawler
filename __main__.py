@@ -177,7 +177,8 @@ class MainApplication(threading.Thread):
                         ssga.join()
 
                         decision_boundary = ssga.steady_state_genetic_algorithm()
-        
+
+                        ssga.evaluate_overall_population()
 
     # Initialize and create the machine learner object
     def create_machine_learner(self):
