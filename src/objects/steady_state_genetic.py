@@ -36,7 +36,7 @@ class SteadyStateGenetic(threading.Thread):
 
             fitnesses = [[mother, mother_fitness], [father, father_fitness], [first_child, first_child_fitness], [second_child, second_child_fitness]]
 
-            fitnesses.sort(key=operator.itemgetter(1), reverse=True)
+            fitnesses.sort(key=operator.itemgetter(1), reverse=False)
 
             self.population[mother_index] = fitnesses[0][0]
             self.population[father_index] = fitnesses[1][0]
@@ -47,6 +47,9 @@ class SteadyStateGenetic(threading.Thread):
             # if fitnesses[0][1] == 1:
             #     print("Found a fitness that is 1." + repr(self.population))
             #     break
+        print('Prediction Population[0]: ' + repr(self.grnn.single(self.population[0])))
+        print('Prediction Population[1]: ' + repr(self.grnn.single(self.population[1])))
+        print('Prediction Population[2]: ' + repr(self.grnn.single(self.population[2])))
 
         return self.population
 
@@ -90,11 +93,12 @@ class SteadyStateGenetic(threading.Thread):
             unigram_vector = []
             for y in range(95):
                 # feature = float(decimal.Decimal(random.randrange(0, 1))/100)
-                feature = float(round(random.uniform(0.1, 1.0), 5))
+                feature = float(round(random.uniform(0.0, 1.0), 5))
                 unigram_vector.append(feature)
             unigram_vector.insert(0, 1.0)
-            unigram_vector.insert(0, 1.0)            
+            unigram_vector.insert(0, 1.0)
             self.population.append(unigram_vector)
+        self.normalize_population()
 
     def normalize_population(self):
         for x in range(len(self.population)):

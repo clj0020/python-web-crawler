@@ -118,7 +118,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
 
     # Normalize the unigram vectors from the dataset
     def normalize_dataset(self):
-        self.client.gui.display_message("\nNormalizing dataset...")
+        # self.client.gui.display_message("\nNormalizing dataset...")
         for x in range(len(self.dataset)):
             magnitude = self.get_magnitude(self.dataset[x])
             # set each unigram value as
@@ -143,7 +143,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         return math.sqrt(distance)
 
     def d_max(self):
-        self.client.gui.display_message("\nFinding sigma...")
+        # self.client.gui.display_message("\nFinding sigma...")
         distances = []
         for x in range(len(self.dataset) - 1):
             test_set = self.dataset[x]
@@ -167,11 +167,11 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         # for all unigram values in the unigram vectors
         for x in range(len(data)):
             # add the absolute value of the two values subtracted
-            distance += abs(data[x] - train_x[x])
-            # distance += math.pow(data[x] - train_x[x], 2)
-        return math.exp(-distance / (math.pow(sigma, 2)))
+            # distance += abs(data[x] - train_x[x])
+            distance += math.pow(data[x] - train_x[x], 2)
+        # return math.exp(-distance / (math.pow(sigma, 2)))
 
-        # return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
+        return math.exp(- (math.pow(distance, 2) / (2 * (math.pow(sigma, 2)))))
 
 
     def grnn(self, data, training_set, classification_array, sigma):
