@@ -3,6 +3,7 @@ import threading
 import time
 import queue
 import json
+import xlsxwriter
 from gui import *
 from src import WebScraper
 from src import MachineLearner
@@ -176,9 +177,18 @@ class MainApplication(threading.Thread):
                         ssga.start()
                         ssga.join()
 
-                        decision_boundary = ssga.steady_state_genetic_algorithm()
+                        # decision_boundary = ssga.steady_state_genetic_algorithm()
+                        # ssga.evaluate_overall_population()
 
-                        ssga.evaluate_overall_population()
+                        for run in range(10):
+                            print("Run #" + repr(run + 1))
+
+                            generations = ssga.steady_state_genetic_algorithm()
+
+                            output_array = ssga.evaluate_overall_population()
+
+                            self.write_to_excel(run, generations, output_array, 'run-' + repr(run + 1) + '-outputs.xlsx')
+
 
     # Initialize and create the machine learner object
     def create_machine_learner(self):
@@ -193,6 +203,29 @@ class MainApplication(threading.Thread):
     # pull a node from the tree
     def get_node(self, node):
         return self.web_scraper.tree[node]
+
+    def write_to_excel(self, run, generations, output_array, filename):
+        workbook = xlsxwriter.Workbook(filename)
+        worksheet = workbook.add_worksheet()
+
+        worksheet.write(0, 0, "Generation")
+        worksheet.write(0, 1, "Best Fitness")
+
+        column = 0
+        row = 1
+        for generation, best_fitness in (generations):
+            worksheet.write(row, column, generation)
+            worksheet.write(row, column + 1, best_fitness)
+            row = row + 1
+
+        row = 0
+        for column_name, value in (output_array):
+            worksheet.write(row, column + 2, column_name)
+            worksheet.write(row, column + 3, value)
+            row = row + 1
+
+        workbook.close()
+
 
 # Start the application
 if __name__ == "__main__":

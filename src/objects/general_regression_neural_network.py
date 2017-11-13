@@ -21,7 +21,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
     def run(self):
         self.load_dataset()
         self.normalize_dataset()
-        # print(self.dataset)
+
 
     def train(self):
         # sigma = self.d_max()
@@ -106,7 +106,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         training_sets = []
         classification_sets = []
         for x in range(len(self.dataset)):
-            training_sets.append(self.dataset[x][2:97])
+            training_sets.append(self.dataset[x][2:97])            
             classification_sets.append([self.dataset[x][1]])
         return training_sets, classification_sets
 

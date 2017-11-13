@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import uuid, base64
 import io
+import xlsxwriter
 from .tree import Tree
 from .webpage_classifier import WebpageClassifier
 from .steady_state_genetic import SteadyStateGenetic
@@ -21,6 +22,8 @@ class WebScraper(threading.Thread):
         self.num_websites_scraped = 0
         self.num_sites_in_interval = 0
         self.predictions = []
+        self.output_array = []
+        self.predictions_output = []
         self.population = []
 
     def run(self):
@@ -31,19 +34,19 @@ class WebScraper(threading.Thread):
     def depth_limited_search(self, node, depth):
 
         def recursive_depth_limited_search(node, depth):
-            # experiment_one = threading.Thread(target=self.experiment_one, args=[self.tree[node]], daemon=True)
-            # experiment_one.start()
-            # experiment_one.join()
-            #
-            # unigram_vector = self.experiment_one(self.tree[node])
-            #
-            # if unigram_vector is None:
-            #     return 'cutoff'
-            #
+            experiment_one = threading.Thread(target=self.experiment_one, args=[self.tree[node]], daemon=True)
+            experiment_one.start()
+            experiment_one.join()
 
-            experiment_two = threading.Thread(target=self.experiment_two, args=[self.tree[node]], daemon=True)
-            experiment_two.start()
-            experiment_two.join()
+            unigram_vector = self.experiment_one(self.tree[node])
+
+            if unigram_vector is None:
+                return 'cutoff'
+
+
+            # experiment_two = threading.Thread(target=self.experiment_two, args=[self.tree[node]], daemon=True)
+            # experiment_two.start()
+            # experiment_two.join()
 
 
             children = self.tree[node].find_children()
@@ -75,16 +78,20 @@ class WebScraper(threading.Thread):
         file_save.start()
         file_save.join()
 
-
         unigram_vector = self.webpage_classifier.scrape_site(site)
+
 
         if unigram_vector is None:
             return None
 
         self.num_websites_scraped = self.num_websites_scraped + 1
-        self.predictions.append(unigram_vector[1])
+        # self.predictions.append(unigram_vector[1])
 
         self.client.gui.display_message(repr(self.num_websites_scraped) + " sites scraped.")
+
+        self.predictions_output.append([site.identifier, unigram_vector[1]])
+        self.predictions.append(unigram_vector[1])
+
 
         if unigram_vector[1] >= -0.015 and unigram_vector[1] <= 0.015:
             self.num_sites_in_interval = self.num_sites_in_interval + 1
@@ -101,6 +108,10 @@ class WebScraper(threading.Thread):
             print("Standard Deviation of First 100 sites scraped: " + repr(standard_deviation_first))
             print("Mean of First 100 sites scraped: " + repr(mean_first))
 
+            self.output_array.append(['standard_deviation_first', standard_deviation_first])
+            self.output_array.append(['mean_first', mean_first])
+
+
         if self.num_websites_scraped == 200:
             print("200 sites scraped!")
 
@@ -112,6 +123,9 @@ class WebScraper(threading.Thread):
             print("Standard Deviation of Last 100 sites scraped: " + repr(standard_deviation_last))
             print("Mean of Last 100 sites scraped: " + repr(mean_last))
 
+            self.output_array.append(['standard_deviation_last', standard_deviation_last])
+            self.output_array.append(['mean_last', mean_last])
+
             standard_deviation_overall = np.std(self.predictions)
             mean_overall = np.mean(self.predictions)
 
@@ -120,8 +134,15 @@ class WebScraper(threading.Thread):
             print("Standard Deviation of 200 sites scraped: " + repr(standard_deviation_overall))
             print("Mean of 200 sites scraped: " + repr(mean_overall))
 
+            self.output_array.append(['standard_deviation_overall', standard_deviation_overall])
+            self.output_array.append(['mean_overall', mean_overall])
+
             self.client.gui.display_message("Number of Sites in the interval [-0.015, 0.015]: " + repr(self.num_sites_in_interval))
             print("Number of Sites in the interval [-0.015, 0.015]: " + repr(self.num_sites_in_interval))
+
+            self.output_array.append(['num_sites_in_interval', self.num_sites_in_interval])
+
+            self.write_to_excel(self.predictions_output, self.output_array, 'web-scraper-outputs.xlsx')
 
         return unigram_vector
 
@@ -156,23 +177,25 @@ class WebScraper(threading.Thread):
 
         self.population.append(unigram_vector)
 
-        # if len(self.population) == 20:
-        #     # Run the steady state genetic algorithm on the population
-        #     ssga = SteadyStateGenetic(self.client, self.population)
-        #     ssga.start()
-        #     ssga.join()
-        #
-        #     self.population = ssga.steady_state_genetic_algorithm()
-        #
-        #     grnn = GeneralRegressionNeuralNetwork(self.client)
-        #     grnn.start()
-        #     grnn.join()
-        #
-        #     prediction = grnn.single(self.population[])
-        #
-        #     for x in range(len(self.population)):
-        #         prediction = grnn.single(self.population[x])
-        #         print(prediction)
-        #
-        #     # Reset list
-        #     self.population = []
+
+    def write_to_excel(self, predictions, output_array, filename):
+        workbook = xlsxwriter.Workbook(filename)
+        worksheet = workbook.add_worksheet()
+
+        worksheet.write(0, 0, "URL")
+        worksheet.write(0, 1, "Prediction")
+
+        column = 0
+        row = 1
+        for url, prediction in (predictions):
+            worksheet.write(row, column, url)
+            worksheet.write(row, column + 1, prediction)
+            row = row + 1
+
+        row = 0
+        for column_name, value in (output_array):
+            worksheet.write(row, column + 2, column_name)
+            worksheet.write(row, column + 3, value)
+            row = row + 1
+
+        workbook.close()
