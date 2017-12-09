@@ -170,10 +170,9 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         test_set = test_set
         training_sets = self.dataset
         distances = self.get_distances(training_sets, test_set, k)
-        prediction = self.get_predicted_classification_value(distances, k)
+        prediction = self.get_predicted_classification_value(distances, k)        
 
-        print('Predicted: ' + repr(prediction))
-        self.client.gui.display_message("\nPredicted: " + repr(prediction))
+        return prediction
 
     # Find the most efficient K value.
     def evaluate_k(self):

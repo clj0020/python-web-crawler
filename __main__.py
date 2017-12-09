@@ -27,7 +27,7 @@ class MainApplication(threading.Thread):
         self.gui = GUI(self)
         self.web_scraper = None
         self.machine_learner = None
-        self.webpage_classifier = None
+        self.webpage_classifier = None        
 
         # start the application
         self.start()

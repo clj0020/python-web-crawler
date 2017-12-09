@@ -22,10 +22,9 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         self.load_dataset()
         self.normalize_dataset()
 
-
     def train(self):
         # sigma = self.d_max()
-        sigma = 0.11853
+        sigma = self.get_sigma()
         training_sets, classification_sets = self.split_array()
 
         data = training_sets[:]
@@ -75,7 +74,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
 
     def single(self, unigram_vector):
         # sigma = self.d_max()
-        sigma = 0.11853
+        sigma = self.get_sigma()
         training_sets, classification_sets = self.split_array()
 
         # self.client.gui.display_message("\nRunning GRNN...")
@@ -84,13 +83,11 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
 
         return prediction
 
-
-
     # Load the data into the training and test sets from the dataset file
     def load_dataset(self):
         # self.client.gui.display_message("\nLoading dataset...")
         # with open('datasets/our_dataset.txt') as myfile:
-        with open('datasets/our_dataset_og.txt') as myfile:
+        with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
 
             # Create a 2d array with the numbers in the dataset file
@@ -106,7 +103,7 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         training_sets = []
         classification_sets = []
         for x in range(len(self.dataset)):
-            training_sets.append(self.dataset[x][2:97])            
+            training_sets.append(self.dataset[x][2:97])
             classification_sets.append([self.dataset[x][1]])
         return training_sets, classification_sets
 
@@ -159,7 +156,28 @@ class GeneralRegressionNeuralNetwork(threading.Thread):
         distances.sort(key=operator.itemgetter(1), reverse=True)
 
         self.client.gui.display_message("\nSigma=" + repr(distances[0][1]))
-        return distances[0][1];
+        return distances[0][1]
+
+    def get_sigma(self):
+        distances = []
+        for x in range(len(self.dataset) - 1):
+            test_set = self.dataset[x]
+
+            # training set consists of every element in dataset except for the test set
+            training_sets = [t for i,t in enumerate(self.dataset) if i!=x]
+
+            for y in range(len(training_sets) - 1):
+                dist = self.manhattan_distance(test_set, training_sets[y])
+                distances.append(dist)
+
+        # Sort the distances in ascending order
+        # distances.sort(key=operator.itemgetter(1), reverse=True)
+        standard_deviation = np.std(distances)
+        sigma = pow(standard_deviation, 2)
+
+        return sigma
+
+
 
     def activator(self, data, train_x, sigma):
 

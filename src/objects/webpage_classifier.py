@@ -1,10 +1,12 @@
 import threading
 import math
+import operator
 import xml.etree.ElementTree as ET
 import urllib.request
 from .web_page import WebPage
 from .distance_weighted_k_nearest_neighbor import DistanceWeightedKNearestNeighbor
 from .general_regression_neural_network import GeneralRegressionNeuralNetwork
+import random
 
 class WebpageClassifier(threading.Thread):
 
@@ -12,6 +14,8 @@ class WebpageClassifier(threading.Thread):
         super().__init__(daemon=True, target=self.run)
         self.__client = client
         self.__dataset = self.extract_dataset()
+        self.__num_times_run = 0
+        self.__probe_range_counter = 0
 
     def run(self):
         print("Webpage Classifier initialized...")
@@ -45,9 +49,9 @@ class WebpageClassifier(threading.Thread):
         return dataset
 
     def scrape_site(self, webpage):
-        # print("Scraping site: {}".format(url))
+        self.__num_times_run = self.__num_times_run + 1
+        print("Scraping site: {}".format(webpage.identifier))
         # webpage = WebPage(self.client, url)
-
 
         frequency = webpage.frequency
 
@@ -71,19 +75,56 @@ class WebpageClassifier(threading.Thread):
         unigram_vector.insert(0, classification)
         unigram_vector.insert(0, len(self.dataset))
 
+
         grnn = GeneralRegressionNeuralNetwork(self.client)
         grnn.start()
         grnn.join()
-        prediction = grnn.single(unigram_vector)
 
-        self.client.gui.display_message("\nPrediction: " + repr(prediction))
+        knn = DistanceWeightedKNearestNeighbor(self.client, 6, False)
+        knn.start()
+        knn.join()
+
+        grnn_prediction = grnn.single(unigram_vector)
+
+        if grnn_prediction >= -0.03 and grnn_prediction <= 0.015:
+            self.__probe_range_counter = self.__probe_range_counter + 1
+
+        url_void_prediction = self.check_classification(webpage.identifier)
+        knn_prediction = knn.distance_weighted_k_nearest_neighbor_single(6, unigram_vector)
+
+        predictions = [grnn_prediction, url_void_prediction, knn_prediction]
+
+        if self.__probe_range_counter < 3:
+            votes = {}
+            # Iterate through predictions
+            for x in range(len(predictions)):
+                # response is equal to each neighbor's class attribute
+                response = predictions[x]
+                # if the response has already been added to class votes array
+                if response in votes:
+                    # add a vote to the response thats already there
+                    votes[response] += 1
+                else:
+                    # initialize the response in the class votes array to 1
+                    votes[response] = 1
+
+            # Sort votes for class attribute in descending order
+            sortedVotes = sorted(votes.items(), key=operator.itemgetter(1), reverse=True)
+
+            # Return the prediction with the most votes
+            prediction = sortedVotes[0][0]
+
+        else:
+            prediction = random.choice(predictions)
+            self.client.gui.display_message('\nPROBE MODE ENABLED')
+
+        self.client.gui.display_message('\nGRNN Prediction: ' + repr(grnn_prediction))
+        self.client.gui.display_message('\nURL Void Prediction: ' + repr(url_void_prediction))
+        self.client.gui.display_message('\nKNN Prediction: ' + repr(knn_prediction))
+        self.client.gui.display_message('\nChosen Prediction: ' + repr(prediction))
+
 
         unigram_vector[1] = prediction
-
-        # actual = self.check_classification(webpage.identifier)
-        #
-        # self.client.gui.display_message("\nActual: " + repr(actual))
-        # unigram_vector[1] = actual
 
         return unigram_vector
 

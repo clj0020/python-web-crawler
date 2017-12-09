@@ -21,7 +21,7 @@ class WebPage(Node):
         self.__tree = None
         # self.__filename = None
 
-        # self.save_file()
+        self.save_file()
         # file_save = threading.Thread(target=self.save_file, daemon=True)
         # file_save.start()
 

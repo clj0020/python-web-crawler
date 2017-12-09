@@ -12,8 +12,6 @@ class KNearestNeighbor(threading.Thread):
         self.__dataset = []
         self.__k = k
 
-
-
     def run(self):
         self.client.gui.display_message("\nK Nearest Neighbor initialized...")
         self.load_dataset()
@@ -39,7 +37,7 @@ class KNearestNeighbor(threading.Thread):
             self.client.gui.display_message("\nLoading dataset...")
 
         # with open('datasets/our_dataset.txt') as myfile:
-        with open('datasets/our_dataset_og.txt') as myfile:
+        with open('datasets/our_dataset.txt') as myfile:
             lines = myfile.readlines()
 
             print("Number of Datasets: " + repr(len(lines)))
