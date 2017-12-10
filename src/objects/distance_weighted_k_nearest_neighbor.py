@@ -20,8 +20,8 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         return self.__is_global
 
     def run(self):
-        if self.client is not None:
-            self.client.gui.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
+        # if self.client is not None:
+        #     # self.client.gui.display_message("\nDistance Weighted K-Nearest Neighbor initialized...")
         self.load_dataset()
         self.normalize_dataset()
 
@@ -170,7 +170,7 @@ class DistanceWeightedKNearestNeighbor(KNearestNeighbor):
         test_set = test_set
         training_sets = self.dataset
         distances = self.get_distances(training_sets, test_set, k)
-        prediction = self.get_predicted_classification_value(distances, k)        
+        prediction = self.get_predicted_classification_value(distances, k)
 
         return prediction
 

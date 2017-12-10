@@ -16,6 +16,9 @@ class WebpageClassifier(threading.Thread):
         self.__dataset = self.extract_dataset()
         self.__num_times_run = 0
         self.__probe_range_counter = 0
+        self.__cautious_safe_counter = 0
+        self.__semi_deceptive_safe_counter = 0
+        self.__deceptive_safe_counter = 0
 
     def run(self):
         print("Webpage Classifier initialized...")
@@ -75,7 +78,6 @@ class WebpageClassifier(threading.Thread):
         unigram_vector.insert(0, classification)
         unigram_vector.insert(0, len(self.dataset))
 
-
         grnn = GeneralRegressionNeuralNetwork(self.client)
         grnn.start()
         grnn.join()
@@ -85,44 +87,106 @@ class WebpageClassifier(threading.Thread):
         knn.join()
 
         grnn_prediction = grnn.single(unigram_vector)
-
-        if grnn_prediction >= -0.03 and grnn_prediction <= 0.015:
-            self.__probe_range_counter = self.__probe_range_counter + 1
-
         url_void_prediction = self.check_classification(webpage.identifier)
         knn_prediction = knn.distance_weighted_k_nearest_neighbor_single(6, unigram_vector)
 
         predictions = [grnn_prediction, url_void_prediction, knn_prediction]
 
-        if self.__probe_range_counter < 3:
-            votes = {}
-            # Iterate through predictions
-            for x in range(len(predictions)):
-                # response is equal to each neighbor's class attribute
-                response = predictions[x]
-                # if the response has already been added to class votes array
-                if response in votes:
-                    # add a vote to the response thats already there
-                    votes[response] += 1
-                else:
-                    # initialize the response in the class votes array to 1
-                    votes[response] = 1
+        THRESHOLD = 4
+        NORMAL_MODE = False
+        CAUTIOUS_MODE = False
+        SEMI_DECEPTIVE_MODE = False
+        DECEPTIVE_MODE = False
 
-            # Sort votes for class attribute in descending order
-            sortedVotes = sorted(votes.items(), key=operator.itemgetter(1), reverse=True)
+        ## NORMAL MODE
+        if self.__probe_range_counter < THRESHOLD:
+            NORMAL_MODE = True
+            CAUTIOUS_MODE = False
+            SEMI_DECEPTIVE_MODE = False
+            DECEPTIVE_MODE = False
+        elif self.__probe_range_counter >= THRESHOLD:
+            CAUTIOUS_MODE = True
+            NORMAL_MODE = False
+            SEMI_DECEPTIVE_MODE = False
+            DECEPTIVE_MODE = False
+            if self.__probe_range_counter >= (THRESHOLD + (THRESHOLD / 4)):
+                SEMI_DECEPTIVE_MODE = True
+                CAUTIOUS_MODE = False
+                NORMAL_MODE = False
+                DECEPTIVE_MODE = False
 
-            # Return the prediction with the most votes
-            prediction = sortedVotes[0][0]
+            if self.__probe_range_counter >= (THRESHOLD + (THRESHOLD / 2)):
+                DECEPTIVE_MODE = True
+                SEMI_DECEPTIVE_MODE = False
+                CAUTIOUS_MODE = False
+                NORMAL_MODE = False
 
+
+
+        if grnn_prediction >= -0.03 and grnn_prediction <= 0.015:
+            self.__probe_range_counter = self.__probe_range_counter + 1
+
+            self.__cautious_safe_counter = 0
+            self.__semi_deceptive_safe_counter = 0
+            self.__deceptive_safe_counter = 0
         else:
+            if CAUTIOUS_MODE:
+                self.__cautious_safe_counter = self.__cautious_safe_counter + 1
+            elif SEMI_DECEPTIVE_MODE:
+                self.__semi_deceptive_safe_counter = self.__semi_deceptive_safe_counter + 1
+            elif DECEPTIVE_MODE:
+                self.__deceptive_safe_counter = self.__deceptive_safe_counter + 1
+
+
+        if NORMAL_MODE:
+            self.client.gui.display_message('\nNORMAL MODE ENABLED')
+            negative_predictions = []
+            positive_predictions = []
+            for x in range(len(predictions)):
+                if predictions[x] < 0:
+                    negative_predictions.append(-1)
+                elif predictions[x] > 0:
+                    positive_predictions.append(1)
+
+            if len(negative_predictions) > len(positive_predictions):
+                prediction = -1
+            elif len(negative_predictions) < len(positive_predictions):
+                prediction = 1
+        ## CAUTIOUS MODE
+        elif CAUTIOUS_MODE:
+            self.client.gui.display_message('\nCAUTIOUS MODE ENABLED')
             prediction = random.choice(predictions)
-            self.client.gui.display_message('\nPROBE MODE ENABLED')
+
+            if self.__cautious_safe_counter >= (THRESHOLD / 4):
+                self.__probe_range_counter = 0
+                self.client.gui.display_message('\nMOVING BACK DOWN TO NORMAL MODE')
+
+        ## SEMI-DECEPTIVE MODE
+        elif SEMI_DECEPTIVE_MODE:
+            self.client.gui.display_message('\nSEMI-DECEPTIVE MODE ENABLED')
+            prediction = random.choice(predictions) * -1
+
+            if self.__semi_deceptive_safe_counter >= (THRESHOLD / 4):
+                self.__probe_range_counter = THRESHOLD
+                self.client.gui.display_message('\nMOVING BACK DOWN TO CAUTIOUS MODE')
+        ## DECEPTIVE_MODE
+        elif DECEPTIVE_MODE:
+            self.client.gui.display_message('\nDECEPTIVE MODE ENABLED')
+            first_choice = random.choice(predictions) * -1
+            second_choice = 1 if random.random() < 0.5 else -1
+
+            choices = [first_choice, second_choice]
+
+            prediction = random.choice(choices)
+
+            if self.__deceptive_safe_counter >= (THRESHOLD / 4):
+                self.__probe_range_counter = THRESHOLD + (THRESHOLD / 4)
+                self.client.gui.display_message('\nMOVING BACK DOWN TO SEMI-DECEPTIVE MODE')
 
         self.client.gui.display_message('\nGRNN Prediction: ' + repr(grnn_prediction))
         self.client.gui.display_message('\nURL Void Prediction: ' + repr(url_void_prediction))
         self.client.gui.display_message('\nKNN Prediction: ' + repr(knn_prediction))
         self.client.gui.display_message('\nChosen Prediction: ' + repr(prediction))
-
 
         unigram_vector[1] = prediction
 

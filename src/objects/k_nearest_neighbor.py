@@ -33,8 +33,8 @@ class KNearestNeighbor(threading.Thread):
 
     # Load the data into the training and test sets from the dataset file
     def load_dataset(self):
-        if self.client is not None:
-            self.client.gui.display_message("\nLoading dataset...")
+        # if self.client is not None:
+        #     self.client.gui.display_message("\nLoading dataset...")
 
         # with open('datasets/our_dataset.txt') as myfile:
         with open('datasets/our_dataset.txt') as myfile:
@@ -59,8 +59,8 @@ class KNearestNeighbor(threading.Thread):
 
     # Normalize the unigram vectors from the dataset
     def normalize_dataset(self):
-        if self.client is not None:
-            self.client.gui.display_message("\nNormalizing Data...")
+        # if self.client is not None:
+        #     self.client.gui.display_message("\nNormalizing Data...")
         for x in range(len(self.dataset)):
             magnitude = self.get_magnitude(self.dataset[x])
             # set each unigram value as
